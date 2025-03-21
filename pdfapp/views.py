@@ -22,6 +22,7 @@ def generate_jwt(user):
     token=jwt.encode(payload,settings.SECRET_KEY,algorithm='HS256')
     return token
 
+
 def register(request):
     if request.method == "POST":
         firstname = request.POST['firstname'].strip()
