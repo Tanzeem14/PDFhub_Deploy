@@ -1,0 +1,67 @@
+{% load static %}
+<!DOCTYPE html>
+<head>
+  <link rel="stylesheet" href="{% static 'css/signin.css'%}">
+</head>
+<div class="container">
+  <div class="heading">Sign Up</div>
+  <form class="form" action="{% url 'register' %}" method="POST">
+    {% csrf_token %}
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+    <input
+      placeholder="FirstName"
+      id="firstname"
+      name="firstname"
+      type="text"
+      class="input"
+      required=""
+    />
+    <input
+      placeholder="LastName"
+      id="lastname"
+      name="lastname"
+      type="text"
+      class="input"
+      required=""
+    />
+    <input
+      placeholder="E-mail"
+      id="email"
+      name="email"
+      type="email"
+      class="input"
+      required=""
+    />
+    <input
+      placeholder="Phone No"
+      id="phone no"
+      name="phoneno"
+      type="text"
+      class="input"
+      required=""
+    />
+    <input
+      placeholder="Password"
+      id="password"
+      name="password"
+      type="password"
+      class="input"
+      required=""
+    />
+    <input
+      placeholder="Confirm Password"
+      id="confirm password"
+      name="con_pass"
+      type="password"
+      class="input"
+      required=""
+    />
+    <input value="Sign Up" type="submit" class="login-button" />
+  </form>
+  
+</div>
+</html>
