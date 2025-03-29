@@ -20,6 +20,12 @@ from django.views.generic import TemplateView
 urlpatterns=[
     path('register/',views.register,name='register'),
     path('login/',views.login,name='login'),
+    path('',views.dashboard,name='dashboard'),
     path('dashboard/',views.dashboard,name='dashboard'),
     path('logout/',views.logout,name='logout'),
+    path('compress/',views.compress,name='compress'),
+    path('convert/',views.convert,name='convert'),
+    path('merge/',views.merge,name='merge'),
+    path('edit/',views.edit,name='edit'),
+    path('ai/',views.ai,name='ai'),
 ]

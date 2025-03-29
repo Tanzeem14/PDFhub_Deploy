@@ -8,6 +8,7 @@ import logging
 import bcrypt
 import datetime
 from pdfapp.db import db
+from pdfapp.utils.merge import merge_pdfs # Import the merge_pdfs function from utils.py
 logger = logging.getLogger(__name__)
 register_table=db.register
 
@@ -99,4 +100,26 @@ def logout(request):
     pass
 
 def dashboard(request):
+    return  render(request,'index.html')
+
+
+def compress(request):
+    pass
+
+
+def convert(request):
+    pass
+
+
+def merge(request):
+    pdf_files = ["file1.pdf", "file2.pdf"]
+    output_pdf = "merged.pdf"
+    merge_pdfs(pdf_files, output_pdf)
+    return render(request, "dashboard.html", {"message": "PDFs Merged Successfully!"})
+    
+
+def edit(request):
+    pass
+
+def ai(request):
     pass

@@ -7,7 +7,9 @@ body {
     margin: 0;
     background-color: #f0f0f0; /* Optional: Change background color */
   }
-  
+  p{
+    text-align:center;
+  }
   /* Center the container */
   .container {
     max-width: 350px;
