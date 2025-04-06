@@ -4,47 +4,61 @@
 {% block title %}Compress-PDFhub{% endblock %}
 
 {% block content %}
-    <link rel="stylesheet" href="{% static 'css/upload1.css' %}">
-    <link rel="stylesheet" href="{% static 'css/loading.css' %}">
-    <br><br>
-    <h1>Compress PDFs</h1><br>
-    <p>Upload a PDF and preview the first page before compression.</p>
-    <br><br><br><br><br>
+<link rel="stylesheet" href="{% static 'css/upload1.css' %}">
+<link rel="stylesheet" href="{% static 'css/loading.css' %}">
+<br><br>
+<h1>Compress PDFs</h1>
+<p>Upload a PDF and preview the first page before compression.</p>
+<br><br><br><br>
+<!-- Messages -->
+{% if messages %}
+  <div class="message-container">
+    {% for message in messages %}
+      <div class="alert {{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+  </div>
+{% endif %}
 
-    <!-- Messages -->
-    {% if messages %}
-      <div class="message-container">
-        {% for message in messages %}
-          <div class="alert {{ message.tags }}">
-            {{ message }}
-          </div>
-        {% endfor %}
-      </div>
-    {% endif %}
+<form id="mergeForm" method="POST" enctype="multipart/form-data">
+  {% csrf_token %}
+  <div id="uploadSection">
     <div class="container">
-        <div class="folder">
-          <div class="front-side">
-            <div class="tip"></div>
-            <div class="cover"></div>
-          </div>
-          <div class="back-side cover"></div>
-        </div>
-        <label class="custom-file-upload">
-          <input id="pdfInput" type="file" accept="application/pdf" />
-          Choose a file
-        </label>
+      <div class="folder">
+        <div class="front-side"><div class="tip"></div><div class="cover"></div></div>
+        <div class="back-side cover"></div>
       </div>
-      
-      <!-- Loading Animation -->
-      <div id="loading" class="loader" style="display: none;">Loading...</div>
-      
-      <!-- PDF Preview (Only First Page) -->
-      <div id="pdfPreviewContainer" style="display: flex; justify-content: center; align-items: center; margin-top: 20px;"></div>
-      
-      <!-- PDF.js Library -->
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
-      
-      <!-- Load JavaScript File -->
-      <script src="{% static 'js/upload.js' %}" defer></script>
+      <label class="custom-file-upload">
+        <input id="pdfInput" type="file" accept="application/pdf" name="pdf_file" />
+        Choose a file
+      </label>
+    </div>
+
+    <div id="loading" class="loader" style="display: none;">Loading...</div>
+    <div id="pdfPreviewContainer"></div>
+  </div>
+
+  <!-- Compress Button + Dropdown -->
+  <div class="button-dropdown-wrapper">
+    <button type="submit" class="submit-btn2" id="mergeBtn">Compress PDF</button>
+
+    <div class="select">
+      <div class="selected" data-default="Compression Quality" data-one="Low Qulaity(Smallest Size)" data-two="Medium Quality" data-three="High Quality" data-four="Best Quality(Largest Size)">
+        <svg class="arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z"/></svg>
+      </div>
+      <div class="options">
+        <div title="Compression Quality"><input id="all" name="option" type="radio" checked /><label class="option" for="all" data-txt="Compression Quality"></label></div>
+        <div title="Low Qulaity(Smallest Size)"><input id="option-1" name="option" type="radio" /><label class="option" for="option-1" data-txt="Low Qulaity(Smallest Size)"></label></div>
+        <div title="Medium Quality"><input id="option-2" name="option" type="radio" /><label class="option" for="option-2" data-txt="Medium Quality"></label></div>
+        <div title="High Quality"><input id="option-3" name="option" type="radio" /><label class="option" for="option-3" data-txt="High Quality"></label></div>
+        <div title="Best Quality(Largest Size)"><input id="option-4" name="option" type="radio" /><label class="option" for="option-4" data-txt="Best Quality(Largest Size)"></label></div>
+
+      </div>
+    </div>
+  </div>
+</form>
+
+<!-- PDF.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+<script src="{% static 'js/upload.js' %}" defer></script>
 
 {% endblock %}
