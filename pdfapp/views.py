@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 import re
+import PyPDF2
 import jwt # Import JWT library
 from django.conf import settings # Import settings from Django
 from django.http import HttpResponse, JsonResponse # Import HttpResponse and JsonResponse from Django
@@ -9,6 +10,11 @@ import bcrypt
 import datetime
 from pdfapp.db import db
 from pdfapp.utils.merge import merge_pdfs # Import the merge_pdfs function from utils.py
+import PyPDF2
+import os
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+from django.shortcuts import render
 logger = logging.getLogger(__name__)
 register_table=db.register
 
@@ -23,6 +29,7 @@ def generate_jwt(user):
     token=jwt.encode(payload,settings.SECRET_KEY,algorithm='HS256')
     return token
 
+from django.contrib import messages  # Ensure this is imported
 
 def register(request):
     if request.method == "POST":
@@ -34,67 +41,144 @@ def register(request):
         con_pass = request.POST['con_pass'].strip()
 
         # Define regex patterns
-        phone_pattern=re.compile(r'^[0-9]{10}$')
-        password_pattern = re.compile(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$")        
-        email_pattern=re.compile(r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$')
-        # email_pattern = re.compile(r'^[\w\.-]+@[\w\.-]+\.\w+$')  # Validates email format
+        phone_pattern = re.compile(r'^[0-9]{10}$')
+        password_pattern = re.compile(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$")
+        email_pattern = re.compile(r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$')
 
         if not firstname or not lastname:
-            return render(request,"signup.html",{"message":"First and Last name are required"})
+            messages.error(request, "First and Last name are required")
+            return redirect("register")
         if not email_pattern.match(email):
-            return render(request, 'signup.html', {'message': 'Invalid email address'})
+            messages.error(request, "Invalid email address")
+            return redirect("register")
         if not phone_pattern.match(number):
-            return render(request,'signup.html',{'message':'Invalid phone number'})
+            messages.error(request, "Invalid phone number")
+            return redirect("register")
         if len(password) < 8 or not password_pattern.match(password):
-            return render(request, 'signup.html', {'message': 'Password must be at least 8 characters long and must contain at least one letter and one number'})
-        elif password != con_pass:
-            return render(request, 'signup.html', {'message': 'Password and Confirm Password must be the same'})
+            messages.error(request, "Password must be at least 8 characters long and must contain at least one letter, one number, and one special character")
+            return redirect("register")
+        if password != con_pass:
+            messages.error(request, "Password and Confirm Password must be the same")
+            return redirect("register")
 
-        existing_user=register_table.find_one({"email":email})
+        existing_user = register_table.find_one({"email": email})
         if existing_user:
-            return render(request, 'signup.html', {'message': 'User with email already exists'})
+            messages.error(request, "User with this email already exists")
+            return redirect("register")
 
         # If all validations pass, proceed with registration
-        # hashed_password = make_password(password)
-        hashed_password=bcrypt.hashpw(password.encode('utf-8'),bcrypt.gensalt())
-        user ={
-            "firstname":firstname,
-            "lastname":lastname,
-            "email":email,  
-            "phone_no":number,
-            "password":hashed_password,
+        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+        user = {
+            "firstname": firstname,
+            "lastname": lastname,
+            "email": email,
+            "phone_no": number,
+            "password": hashed_password,
             "created_at": datetime.datetime.now(datetime.UTC),
-            "updated_at":datetime.datetime.now(datetime.UTC),
-
+            "updated_at": datetime.datetime.now(datetime.UTC),
         }
         try:
             register_table.insert_one(user)
-            # messages.success(request, "Registration Successful!")
+            messages.success(request, "Registration Successful!")
             return redirect("login")
         except Exception as e:
-            logger.error(f"Error saving user: {e}",exc_info=True)
-            return render(request, 'signup.html', {'message': 'An error occurred while saving the user. Please try again.'})
+            logger.error(f"Error saving user: {e}", exc_info=True)
+            messages.error(request, "An error occurred while saving the user. Please try again.")
+            return redirect("register")
 
     return render(request, "signup.html")
+# def register(request):
+#     if request.method == "POST":
+#         firstname = request.POST['firstname'].strip()
+#         lastname = request.POST['lastname'].strip()
+#         email = request.POST['email'].strip()
+#         number = request.POST['phoneno'].strip()
+#         password = request.POST['password'].strip()
+#         con_pass = request.POST['con_pass'].strip()
+
+#         # Define regex patterns
+#         phone_pattern=re.compile(r'^[0-9]{10}$')
+#         password_pattern = re.compile(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$")        
+#         email_pattern=re.compile(r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$')
+#         # email_pattern = re.compile(r'^[\w\.-]+@[\w\.-]+\.\w+$')  # Validates email format
+
+#         if not firstname or not lastname:
+#             return render(request,"register.html",{"message":"First and Last name are required"})
+#         if not email_pattern.match(email):
+#             return render(request, 'register.html', {'message': 'Invalid email address'})
+#         if not phone_pattern.match(number):
+#             return render(request,'register.html',{'message':'Invalid phone number'})
+#         if len(password) < 8 or not password_pattern.match(password):
+#             return render(request, 'register.html', {'message': 'Password must be at least 8 characters long and must contain at least one letter and one number'})
+#         elif password != con_pass:
+#             return render(request, 'register.html', {'message': 'Password and Confirm Password must be the same'})
+
+#         existing_user=register_table.find_one({"email":email})
+#         if existing_user:
+#             return render(request, 'register.html', {'message': 'User with email already exists'})
+
+#         # If all validations pass, proceed with registration
+#         # hashed_password = make_password(password)
+#         hashed_password=bcrypt.hashpw(password.encode('utf-8'),bcrypt.gensalt())
+#         user ={
+#             "firstname":firstname,
+#             "lastname":lastname,
+#             "email":email,  
+#             "phone_no":number,
+#             "password":hashed_password,
+#             "created_at": datetime.datetime.now(datetime.UTC),
+#             "updated_at":datetime.datetime.now(datetime.UTC),
+
+#         }
+#         try:
+#             register_table.insert_one(user)
+#             # messages.success(request, "Registration Successful!")
+#             return redirect("login")
+#         except Exception as e:
+#             logger.error(f"Error saving user: {e}",exc_info=True)
+#             return render(request, 'register.html', {'message': 'An error occurred while saving the user. Please try again.'})
+
+#     return render(request, "register.html")
 
 
-def login(request):
-    if request.method=="POST":
-        email=request.POST['email'].strip()
-        password=request.POST['password'].strip()
+# def login(request):
+#     if request.method=="POST":
+#         email=request.POST['email'].strip()
+#         password=request.POST['password'].strip()
 
-        user=register_table.find_one({"email":email})
-        if not user:
-            return render(request,"signin.html",{"message":"User does not exist"})
+#         user=register_table.find_one({"email":email})
+#         if not user:
+#             return render(request,"signin.html",{"message":"User does not exist"})
        
-        if not bcrypt.checkpw(password.encode('utf-8'),user['password']):
-            return render(request,"signin.html",{"message":"Invalid password"})
+#         if not bcrypt.checkpw(password.encode('utf-8'),user['password']):
+#             return render(request,"signin.html",{"message":"Invalid password"})
         
-        token=generate_jwt(user)
-        response= redirect("dashboard")
-        response.set_cookie("jwt_token",token,httponly=True,max_age=3600) # Set cookie to expire in 1 hour    
+#         token=generate_jwt(user)
+#         response= redirect("dashboard")
+#         response.set_cookie("jwt_token",token,httponly=True,max_age=3600) # Set cookie to expire in 1 hour    
+#         return response
+#     return render(request,"signin.html")
+def login(request):
+    if request.method == "POST":
+        email = request.POST['email'].strip()
+        password = request.POST['password'].strip()
+
+        user = register_table.find_one({"email": email})
+        if not user:
+            messages.error(request, "User does not exist")
+            return redirect("login")
+
+        if not bcrypt.checkpw(password.encode('utf-8'), user['password']):
+            messages.error(request, "Invalid password")
+            return redirect("login")
+
+        token = generate_jwt(user)
+        response = redirect("dashboard")
+        response.set_cookie("jwt_token", token, httponly=True, max_age=3600)  # Set cookie to expire in 1 hour
+        messages.success(request, "Login successful!")
         return response
-    return render(request,"signin.html")
+
+    return render(request, "signin.html")
 
 def logout(request):
     pass
@@ -102,21 +186,59 @@ def logout(request):
 def dashboard(request):
     return  render(request,'index.html')
 
+def navbar (request):
+    return render(request,'navbar.html')
 
 def compress(request):
-    pass
+    return render(request,'compress.html')
 
 
 def convert(request):
-    pass
+    return render(request,'convert.html')
 
+
+#def merge(request):
+    #pdf_files = ["file1.pdf", "file2.pdf"]
+    #output_pdf = "merged.pdf"
+    #merge_pdfs(pdf_files, output_pdf)
+    #return render(request, "merge.html", {"message": "PDFs Merged Successfully!"})
 
 def merge(request):
-    pdf_files = ["file1.pdf", "file2.pdf"]
-    output_pdf = "merged.pdf"
-    merge_pdfs(pdf_files, output_pdf)
-    return render(request, "dashboard.html", {"message": "PDFs Merged Successfully!"})
-    
+    if request.method == "POST":
+        uploaded_files = request.FILES.getlist("pdf_files")
+
+        if len(uploaded_files) < 2:
+            messages.error(request, "Please upload at least 2 PDFs to merge.")
+            return redirect("merge")
+
+        merger = PyPDF2.PdfMerger()
+        temp_files = []
+
+        try:
+            for file in uploaded_files:
+                file_path = default_storage.save(f"temp/{file.name}", ContentFile(file.read()))
+                temp_files.append(file_path)
+
+                with default_storage.open(file_path, "rb") as pdf_file:
+                    merger.append(pdf_file)
+
+            merged_pdf_path = os.path.join(settings.MEDIA_ROOT, "merged_output.pdf")
+
+            with open(merged_pdf_path, "wb") as output_file:
+                merger.write(output_file)
+
+            merger.close()
+
+            messages.success(request, "PDFs Merged Successfully!")
+            return redirect("merge")
+
+        finally:
+            for file in temp_files:
+                default_storage.delete(file)
+
+    return render(request, "merge.html")
+
+ 
 
 def edit(request):
     pass

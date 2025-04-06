@@ -1,0 +1,40 @@
+{% extends "navbar.html" %}
+{% load static %}
+
+{% block title %}Convert-PDFhub{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/upload1.css' %}">
+<link rel="stylesheet" href="{% static 'css/loading.css' %}">
+<br><br>
+<h1>PDF Converter</h1><br>
+<p>Upload a PDF and preview the first page before conversion.</p>
+<br><br><br><br><br>
+
+<div class="container">
+  <div class="folder">
+    <div class="front-side">
+      <div class="tip"></div>
+      <div class="cover"></div>
+    </div>
+    <div class="back-side cover"></div>
+  </div>
+  <label class="custom-file-upload">
+    <input id="pdfInput" type="file" accept="application/pdf" />
+    Choose a file
+  </label>
+</div>
+
+<!-- Loading Animation -->
+<div id="loading" class="loader" style="display: none;">Loading...</div>
+
+<!-- PDF Preview (Only First Page) -->
+<div id="pdfPreviewContainer" style="display: flex; justify-content: center; align-items: center; margin-top: 20px;"></div>
+
+<!-- PDF.js Library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+
+<!-- Load JavaScript File -->
+<script src="{% static 'js/upload.js' %}" defer></script>
+
+{% endblock %}

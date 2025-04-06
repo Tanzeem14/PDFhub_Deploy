@@ -1,0 +1,87 @@
+{% extends "navbar.html" %}
+{% load static %}
+
+{% block title %}Merge PDFs - PDFhub{% endblock %}
+
+{% block content %}
+
+<link rel="stylesheet" href="{% static 'css/upload1.css' %}">
+<link rel="stylesheet" href="{% static 'css/loading.css' %}">
+
+<br><br>
+<h1>Merge PDFs</h1><br>
+<p>Combine multiple PDF files into one in just a few clicks.</p>
+<br><br><br>
+
+<!-- Messages -->
+{% if messages %}
+  <div class="message-container">
+    {% for message in messages %}
+      <div class="alert {{ message.tags }}">
+        {{ message }}
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+
+  <!-- Merge PDF Form -->
+  <form id="mergeForm" method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div id="uploadSection">
+      <div class="container">
+        <div class="folder">
+          <div class="front-side">
+            <div class="tip"></div>
+            <div class="cover"></div>
+          </div>
+          <div class="back-side cover"></div>
+        </div>
+        <label class="custom-file-upload">
+          <input id="pdfInput" name="pdf_files" type="file" accept="application/pdf" multiple required />
+          Choose Files
+        </label>
+      </div>
+  
+      <div style="text-align: center;">
+        <button type="submit" class="submit-btn" id="mergeBtn">Merge PDFs</button>
+      </div>
+    </div>
+  </form>
+  
+
+
+<!-- PDF Preview Container -->
+<div id="pdfPreviewContainer" style="display: flex; gap: 10px; margin-top: 20px;"></div>
+
+<!-- Loading Animation -->
+<div id="loading" class="loader" style="display: none;">Loading...</div>
+
+<!-- PDF.js Library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+
+<!-- Load JavaScript File -->
+<script src="{% static 'js/mupload.js' %}" defer></script>
+
+<!-- Optional Button Style-->
+<style>
+  .submit-btn {
+    margin-top: 20px;
+    padding: 10px 20px;
+    background-color: #0077cc;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    text-align: center;
+  }
+  .alert {
+    background-color: #ffe0e0;
+    border: 1px solid #cc0000;
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+    color: #cc0000;
+}
+</style>
+
+{% endblock %}

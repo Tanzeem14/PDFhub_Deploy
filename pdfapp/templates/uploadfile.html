@@ -1,0 +1,25 @@
+<div class="container">
+    <div class="folder">
+      <div class="front-side">
+        <div class="tip"></div>
+        <div class="cover"></div>
+      </div>
+      <div class="back-side cover"></div>
+    </div>
+    <label class="custom-file-upload">
+      <input id="pdfInput" type="file" accept="application/pdf" />
+      Choose a file
+    </label>
+  </div>
+  
+  <!-- Loading Animation -->
+  <div id="loading" class="loader" style="display: none;">Loading...</div>
+  
+  <!-- PDF Preview (Only First Page) -->
+  <div id="pdfPreviewContainer" style="display: flex; justify-content: center; align-items: center; margin-top: 20px;"></div>
+  
+  <!-- PDF.js Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+  
+  <!-- Load JavaScript File -->
+  <!-- <script src="{% static 'js/upload.js' %}" defer></script> -->
