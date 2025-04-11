@@ -29,4 +29,5 @@ urlpatterns=[
     path('merge/',views.merge,name='merge'),
     path('edit/',views.edit,name='edit'),
     path('ai/',views.ai,name='ai'),
+    path('logout/',views.logout,name='logout'),
 ]

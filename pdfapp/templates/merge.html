@@ -48,6 +48,12 @@
     </div>
   </form>
   
+  <script>
+    setTimeout(() => {
+      const alerts = document.querySelectorAll('.alert');
+      alerts.forEach(alert => alert.style.display = 'none');
+    }, 3000); // hides after 3 seconds
+  </script>
 
 
 <!-- PDF Preview Container -->
@@ -62,26 +68,6 @@
 <!-- Load JavaScript File -->
 <script src="{% static 'js/mupload.js' %}" defer></script>
 
-<!-- Optional Button Style-->
-<style>
-  .submit-btn {
-    margin-top: 20px;
-    padding: 10px 20px;
-    background-color: #0077cc;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    text-align: center;
-  }
-  .alert {
-    background-color: #ffe0e0;
-    border: 1px solid #cc0000;
-    padding: 10px;
-    margin-bottom: 15px;
-    border-radius: 5px;
-    color: #cc0000;
-}
-</style>
+
 
 {% endblock %}

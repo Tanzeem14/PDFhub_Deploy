@@ -1,0 +1,63 @@
+{% extends "navbar.html" %} {% load static %} {% block content %}
+{% if messages %}
+  <div class="message-container">
+    {% for message in messages %}
+      <div class="alert {{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+  </div>
+{% endif %}
+<html>
+<body>
+  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}" />
+
+  <div class="hero-container">
+    <div class="hero-text">
+      <h1>Everything You Need for PDF, Just a Click Away</h1>
+      <p>
+        <i
+          >Access powerful tools to edit, compress, convert, and manage your
+          PDFs effortlessly.</i
+        >
+      </p>
+      <br /><br />
+      <div class="tooltip-wrapper">
+        <ul class="tooltip-container">
+          <li style="--i: 1.1s" class="nav-link">
+            <div class="tooltip-tab">Explore all PDF tools</div>
+            <div class="tooltip">
+              <ul class="tooltip-menu-with-icon">
+                <li class="tooltip-link">
+                  <a class="tooltip-links" href="{% url 'convert' %}"> Convert </a>
+                </li>
+                <li class="tooltip-link">
+                  <a class="tooltip-links" href="{% url 'compress' %}"> Compress </a>
+                </li>
+                <li class="tooltip-link">
+                  <a class="tooltip-links" href="{% url 'merge' %}"> Merge </a>
+                </li>
+              </ul>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="hero-image">
+      <img src="{% static 'images/bg4.png' %}" alt="PDF Tools Preview" />
+      <br />
+    </div>
+  </div>
+  <script>
+    setTimeout(() => {
+      const alerts = document.querySelectorAll('.alert');
+      alerts.forEach(alert => {
+        alert.style.transition = 'opacity 0.5s ease';
+        alert.style.opacity = '0';
+        setTimeout(() => alert.remove(), 500); // remove from DOM after fade out
+      });
+    }, 3000); // 3 seconds
+  </script>
+  
+</body>
+</html>
+{% endblock %}
