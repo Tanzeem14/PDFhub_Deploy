@@ -177,7 +177,7 @@ def merge(request):
     return render(request, "merge.html")
 
 def edit(request):
-    pass
+    return render(request,'edit.html')
 
 def ai(request):
     pass
