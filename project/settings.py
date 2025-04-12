@@ -15,6 +15,12 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+import os
+
+POPPLER_PATH = r"D:\PDFAPPLIBRARY\POPPLER\poppler-24.08.0\Library\bin"
+
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
@@ -84,15 +90,12 @@ WSGI_APPLICATION = 'project.wsgi.application'
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
 DATABASES = {
-    # 'default': {
-    #     'ENGINE': 'djongo',
-    #     'NAME': 'pdfdb',  # Replace with your actual DB name
-    #     'ENFORCE_SCHEMA': False,  # Disable schema enforcement
-    #     'CLIENT': {
-    #         'host': 'mongodb://localhost:27017/',  # Ensure correct MongoDB connection
-    #     }
-    # }
+    'default': {
+        'ENGINE': 'django.db.backends.dummy',
+    }
 }
+
+
 
 
 
@@ -180,3 +183,7 @@ MIGRATION_MODULES = {
     "sessions": None,
     "admin": None,
 }
+
+
+
+

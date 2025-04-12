@@ -45,15 +45,30 @@
       <div class="selected" data-default="Compression Quality" data-one="Low Qulaity(Smallest Size)" data-two="Medium Quality" data-three="High Quality" data-four="Best Quality(Largest Size)">
         <svg class="arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z"/></svg>
       </div>
+     
       <div class="options">
-        <div title="Compression Quality"><input id="all" name="option" type="radio" checked /><label class="option" for="all" data-txt="Compression Quality"></label></div>
-        <div title="Low Qulaity(Smallest Size)"><input id="option-1" name="option" type="radio" /><label class="option" for="option-1" data-txt="Low Qulaity(Smallest Size)"></label></div>
-        <div title="Medium Quality"><input id="option-2" name="option" type="radio" /><label class="option" for="option-2" data-txt="Medium Quality"></label></div>
-        <div title="High Quality"><input id="option-3" name="option" type="radio" /><label class="option" for="option-3" data-txt="High Quality"></label></div>
-        <div title="Best Quality(Largest Size)"><input id="option-4" name="option" type="radio" /><label class="option" for="option-4" data-txt="Best Quality(Largest Size)"></label></div>
-
-      </div>
+        <div title="Compression Quality">
+            <input id="all" name="option" type="radio" value="/default" checked />
+            <label class="option" for="all" data-txt="Compression Quality"></label>
+        </div>
+        <div title="Low Quality (Smallest Size)">
+            <input id="option-1" name="option" type="radio" value="/screen" />
+            <label class="option" for="option-1" data-txt="Low Quality (Smallest Size)"></label>
+        </div>
+        <div title="Medium Quality">
+            <input id="option-2" name="option" type="radio" value="/ebook" />
+            <label class="option" for="option-2" data-txt="Medium Quality"></label>
+        </div>
+        <div title="High Quality">
+            <input id="option-3" name="option" type="radio" value="/printer" />
+            <label class="option" for="option-3" data-txt="High Quality"></label>
+        </div>
+        <div title="Best Quality (Largest Size)">
+            <input id="option-4" name="option" type="radio" value="/prepress" />
+            <label class="option" for="option-4" data-txt="Best Quality (Largest Size)"></label>
+        </div>
     </div>
+    </div> 
   </div>
 </form>
 

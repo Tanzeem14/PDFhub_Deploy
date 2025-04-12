@@ -1,3 +1,4 @@
+
 {% extends "navbar.html" %}
 {% load static %}
 
@@ -7,34 +8,77 @@
 <link rel="stylesheet" href="{% static 'css/upload1.css' %}">
 <link rel="stylesheet" href="{% static 'css/loading.css' %}">
 <br><br>
-<h1>PDF Converter</h1><br>
-<p>Upload a PDF and preview the first page before conversion.</p>
-<br><br><br><br><br>
+<h1>Convert PDFs</h1>
+<p>Upload a PDF and select the format you want to convert it into.</p>
+<br><br><br><br>
 
-<div class="container">
-  <div class="folder">
-    <div class="front-side">
-      <div class="tip"></div>
-      <div class="cover"></div>
-    </div>
-    <div class="back-side cover"></div>
+<!-- Messages -->
+{% if messages %}
+  <div class="message-container">
+    {% for message in messages %}
+      <div class="alert {{ message.tags }}">{{ message }}</div>
+    {% endfor %}
   </div>
-  <label class="custom-file-upload">
-    <input id="pdfInput" type="file" accept="application/pdf" />
-    Choose a file
-  </label>
+{% endif %}
+
+<form id="convertForm" method="POST" enctype="multipart/form-data">
+  {% csrf_token %}
+  <div id="uploadSection">
+    <div class="container">
+      <div class="folder">
+        <div class="front-side"><div class="tip"></div><div class="cover"></div></div>
+        <div class="back-side cover"></div>
+      </div>
+      <label class="custom-file-upload">
+        <input id="pdfInput" type="file" accept="application/pdf" name="pdf_file" />
+        Choose a file
+      </label>
+    </div>
+
+    <div id="loading" class="loader" style="display: none;">Loading...</div>
+    <div id="pdfPreviewContainer"></div>
+  </div>
+
+  <!-- Convert Button + Dropdown -->
+  <div class="button-dropdown-wrapper">
+    <button type="submit" class="submit-btn2" id="convertBtn">Convert PDF</button>
+
+    <!-- Dropdown Format Options -->
+<div class="select">
+  <div class="selected" data-default="Select Format" data-one="Image (.jpg)" data-two="PowerPoint (.pptx)" data-three="Word (.docx)">
+    <svg class="arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+      <path d="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z"/>
+    </svg>
+  </div>
+
+  <div class="options">
+    <div title="Compression Quality">
+      <input id="all" name="format_option" type="radio" value="/default" checked />
+      <label class="option" for="all" data-txt="convert"></label>
+  </div>
+    <div title="Image (.jpg)">
+      <input id="opt-jpg" name="format_option" type="radio" value="jpg" />
+      <label class="option" for="opt-jpg" data-txt="Image (.jpg)"></label>
+    </div>
+    <div title="PowerPoint (.pptx)">
+      <input id="opt-pptx" name="format_option" type="radio" value="pptx" />
+      <label class="option" for="opt-pptx" data-txt="PowerPoint (.pptx)"></label>
+    </div>
+    <div title="Word (.docx)">
+      <input id="opt-docx" name="format_option" type="radio" value="docx" />
+      <label class="option" for="opt-docx" data-txt="Word (.docx)"></label>
+    </div>
+  </div>
 </div>
 
-<!-- Loading Animation -->
-<div id="loading" class="loader" style="display: none;">Loading...</div>
+  </div>
+</form>
 
-<!-- PDF Preview (Only First Page) -->
-<div id="pdfPreviewContainer" style="display: flex; justify-content: center; align-items: center; margin-top: 20px;"></div>
-
-<!-- PDF.js Library -->
+<!-- PDF.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
-
-<!-- Load JavaScript File -->
 <script src="{% static 'js/upload.js' %}" defer></script>
 
 {% endblock %}
+
+
+

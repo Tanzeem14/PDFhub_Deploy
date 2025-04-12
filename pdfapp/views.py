@@ -1,6 +1,5 @@
 from django.shortcuts import render, redirect
 import re
-import PyPDF2
 import jwt # Import JWT library
 from django.conf import settings # Import settings from Django
 from django.http import HttpResponse, JsonResponse # Import HttpResponse and JsonResponse from Django
@@ -12,12 +11,20 @@ from pdfapp.db import db
 from pdfapp.utils.merge import merge_pdfs # Import the merge_pdfs function from utils.py
 import PyPDF2
 import os
+from pdfapp.utils.compress import compress_pdf  # Import the compress_pdf function
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from django.shortcuts import render
-logger = logging.getLogger(__name__)
+# logger = logging.getLogger(__name__)
+import logging
+logging.basicConfig(level=logging.WARNING)  # Or logging.ERROR to only show errors
+
 register_table=db.register
 from django.views.decorators.http import require_POST 
+from pdfapp.utils.convert import convert_pdf_to_word, convert_pdf_to_images, convert_pdf_to_pptx
+
+import zipfile
+
 
 
 def generate_jwt(user):
@@ -111,8 +118,7 @@ def login(request):
 
     return render(request, "signin.html")
 
-def logout(request):
-    pass
+
 
 def dashboard(request):
     token = request.COOKIES.get("jwt_token")
@@ -132,49 +138,168 @@ def dashboard(request):
 def navbar (request):
     return render(request,'navbar.html')
 
+
+
 def compress(request):
-    return render(request,'compress.html')
-
-def convert(request):
-    return render(request,'convert.html')
-
-def merge(request):
-    # Clear messages unrelated to merge
-    storage = messages.get_messages(request)
-    storage.used = True  # This marks all messages as used so they don't show
+    """
+    Handle the PDF compression request.
+    """
     if request.method == "POST":
-        uploaded_files = request.FILES.getlist("pdf_files")
+        uploaded_file = request.FILES.get("pdf_file")  # Get the uploaded file
+        quality = request.POST.get("option", "/ebook")  # Get the selected quality option
 
-        if len(uploaded_files) < 2:
-            messages.error(request, "Please upload at least 2 PDFs to merge.")
-            return redirect("merge")
-
-        merger = PyPDF2.PdfMerger()
-        temp_files = []
+        if not uploaded_file:
+            messages.error(request, "Please upload a PDF file.")
+            return redirect("compress")
 
         try:
-            for file in uploaded_files:
-                file_path = default_storage.save(f"temp/{file.name}", ContentFile(file.read()))
-                temp_files.append(file_path)
+            # Call the utility function to compress the PDF
+            compressed_file_path = compress_pdf(uploaded_file, quality)
+            relative_path = os.path.relpath(compressed_file_path, settings.MEDIA_ROOT)  # Get relative path for MEDIA_URL
+            messages.success(request, f"PDF Compressed Successfully!")
+        except Exception as e:
+            messages.error(request, f"An error occurred while compressing the PDF: {str(e)}")
 
-                with default_storage.open(file_path, "rb") as pdf_file:
-                    merger.append(pdf_file)
+    return render(request, "compress.html")
 
-            merged_pdf_path = os.path.join(settings.MEDIA_ROOT, "merged_output.pdf")
 
-            with open(merged_pdf_path, "wb") as output_file:
-                merger.write(output_file)
+# def convert(request):
+#     """
+#     Handle PDF conversion requests.
+#     """
+#     if request.method == "POST":
+#         uploaded_file = request.FILES.get("pdf_file")
+#         format_option = request.POST.get("format_option")
 
-            merger.close()
+#         if not uploaded_file:
+#             messages.error(request, "Please upload a PDF file.")
+#             return redirect("convert")
 
-            messages.success(request, "PDFs Merged Successfully!")
-            return redirect("merge")
+#         # Save the uploaded file temporarily
+#         temp_dir = os.path.join(settings.MEDIA_ROOT, "temp")
+#         if not os.path.exists(temp_dir):
+#             os.makedirs(temp_dir)
+
+#         temp_pdf_path = os.path.join(temp_dir, uploaded_file.name)
+#         with open(temp_pdf_path, "wb") as temp_file:
+#             for chunk in uploaded_file.chunks():
+#                 temp_file.write(chunk)
+
+#         try:
+#             # Perform the conversion based on the selected format
+#             if format_option == "docx":
+#                 output_file = os.path.join(temp_dir, f"{os.path.splitext(uploaded_file.name)[0]}.docx")
+#                 convert_pdf_to_word(temp_pdf_path, output_file)
+#                 messages.success(request, f"PDF converted to Word successfully! Download: {output_file}")
+#             elif format_option == "jpg":
+#                 output_dir = os.path.join(temp_dir, "images")
+#                 image_paths = convert_pdf_to_images(temp_pdf_path, output_dir)
+#                 # Zip the images for download
+#                 zip_file = os.path.join(temp_dir, "images.zip")
+#                 with zipfile.ZipFile(zip_file, "w") as zf:
+#                     for image_path in image_paths:
+#                         zf.write(image_path, os.path.basename(image_path))
+#                 messages.success(request, f"PDF converted to images successfully! Download: {zip_file}")
+#             elif format_option == "pptx":
+#                 output_file = os.path.join(temp_dir, f"{os.path.splitext(uploaded_file.name)[0]}.pptx")
+#                 convert_pdf_to_pptx(temp_pdf_path, output_file)
+#                 messages.success(request, f"PDF converted to PowerPoint successfully! Download: {output_file}")
+#             else:
+#                 messages.error(request, "Invalid format selected.")
+#                 return redirect("convert")
+#         except Exception as e:
+#             messages.error(request, f"An error occurred during conversion: {str(e)}")
+#             return redirect("convert")
+#         finally:
+#             # Clean up the temporary PDF file
+#             if os.path.exists(temp_pdf_path):
+#                 os.remove(temp_pdf_path)
+
+#     return render(request, "convert.html")
+
+
+from django.utils.html import format_html
+
+
+
+
+def convert(request):
+    if request.method == "POST":
+        uploaded_file = request.FILES.get("pdf_file")
+        format_option = request.POST.get("format_option")
+
+        if not uploaded_file:
+            messages.error(request, "Please upload a PDF file.")
+            return redirect("convert")
+
+        temp_dir = os.path.join(settings.MEDIA_ROOT, "temp")
+        converted_dir = os.path.join(settings.MEDIA_ROOT, "converted")
+        os.makedirs(temp_dir, exist_ok=True)
+        os.makedirs(converted_dir, exist_ok=True)
+
+        filename = os.path.splitext(uploaded_file.name)[0]
+        temp_pdf_path = os.path.join(temp_dir, uploaded_file.name)
+
+        with open(temp_pdf_path, "wb") as temp_file:
+            for chunk in uploaded_file.chunks():
+                temp_file.write(chunk)
+
+        try:
+            if format_option == "docx":
+                output_file = os.path.join(converted_dir, f"{filename}.docx")
+                convert_pdf_to_word(temp_pdf_path, output_file)
+                file_url = os.path.join(settings.MEDIA_URL, "converted", f"{filename}.docx")
+                messages.success(request, format_html("Converted to Word! <a href='{}' download>Download Word</a>", file_url))
+
+            elif format_option == "jpg":
+                image_dir = os.path.join(converted_dir, f"{filename}_images")
+                image_paths = convert_pdf_to_images(temp_pdf_path, image_dir)
+
+                zip_path = os.path.join(converted_dir, f"{filename}.jpg.zip")
+                with zipfile.ZipFile(zip_path, "w") as zf:
+                    for image_path in image_paths:
+                        zf.write(image_path, os.path.basename(image_path))
+
+                file_url = os.path.join(settings.MEDIA_URL, "converted", f"{filename}.jpg.zip")
+                messages.success(request, format_html("Converted to images! <a href='{}' download>Download ZIP</a>", file_url))
+
+            elif format_option == "pptx":
+                output_file = os.path.join(converted_dir, f"{filename}.pptx")
+                convert_pdf_to_pptx(temp_pdf_path, output_file)
+                file_url = os.path.join(settings.MEDIA_URL, "converted", f"{filename}.pptx")
+                messages.success(request, format_html("Converted to PowerPoint! <a href='{}' download>Download PPTX</a>", file_url))
+
+            else:
+                messages.error(request, "Invalid format selected.")
+                return redirect("convert")
+
+        except Exception as e:
+            messages.error(request, f"An error occurred: {str(e)}")
+            return redirect("convert")
 
         finally:
-            for file in temp_files:
-                default_storage.delete(file)
+            if os.path.exists(temp_pdf_path):
+                os.remove(temp_pdf_path)
+
+    return render(request, "convert.html")
+
+def merge(request):
+    storage = messages.get_messages(request)
+    storage.used = True
+
+    if request.method == "POST":
+        uploaded_files = request.FILES.getlist("pdf_files")
+        success, message = merge_pdfs(uploaded_files)
+
+        if success:
+            messages.success(request, message)
+        else:
+            messages.error(request, message)
+
+        return redirect("merge")
 
     return render(request, "merge.html")
+
 
 def edit(request):
     pass
