@@ -43,7 +43,7 @@ def compress_pdf(uploaded_file, quality='/ebook'):
 
     # Ghostscript command (no extra quotes)
     gs_command = [
-        r"D:\PDFAPPLIBRARY\ghostscript\gs10.05.0\bin\gswin64c.exe",
+        r"C:\Program Files\gs\gs10.05.0\bin\gswin64c.exe",
         "-sDEVICE=pdfwrite",
         "-dCompatibilityLevel=1.4",
         f"-dPDFSETTINGS={quality}",

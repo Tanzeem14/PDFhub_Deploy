@@ -52,10 +52,10 @@
   </div>
 
   <div class="options">
-    <div title="Compression Quality">
-      <input id="all" name="format_option" type="radio" value="/default" checked />
-      <label class="option" for="all" data-txt="convert"></label>
-  </div>
+    <div title="Convert">
+            <input id="all" name="format_option" type="radio" value="/default" checked />
+            <label class="option" for="all" data-txt=" Convert"></label>
+        </div>
     <div title="Image (.jpg)">
       <input id="opt-jpg" name="format_option" type="radio" value="jpg" />
       <label class="option" for="opt-jpg" data-txt="Image (.jpg)"></label>
@@ -77,6 +77,13 @@
 <!-- PDF.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 <script src="{% static 'js/upload.js' %}" defer></script>
+
+<script>
+  setTimeout(() => {
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(alert => alert.style.display = 'none');
+  }, 3000); // hides after 3 seconds
+</script>
 
 {% endblock %}
 

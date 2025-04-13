@@ -12,12 +12,13 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 
 from pathlib import Path
 
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 import os
 
-POPPLER_PATH = r"D:\PDFAPPLIBRARY\POPPLER\poppler-24.08.0\Library\bin"
+POPPLER_PATH = r"C:\Users\lenovo\Downloads\Release-24.08.0-0\poppler-24.08.0\Library\bin"
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
@@ -91,7 +92,7 @@ WSGI_APPLICATION = 'project.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.dummy',
+        # 'ENGINE': 'django.db.backends.dummy',
     }
 }
 
@@ -163,7 +164,7 @@ LOGGING = {
     'disable_existing_loggers': False,
     'handlers': {
         'file': {
-            'level': 'DEBUG',
+            'level': 'WARNING',
             'class': 'logging.FileHandler',
             'filename': 'debug.log',
         },
@@ -171,18 +172,18 @@ LOGGING = {
     'loggers': {
         'django': {
             'handlers': ['file'],
-            'level': 'DEBUG',
+            'level': 'WARNING',
             'propagate': True,
         },
     },
 }
 # Configure the authentication system to stop custom migrations for mongoDB
-MIGRATION_MODULES = {
-    "auth": None,
-    "contenttypes": None,
-    "sessions": None,
-    "admin": None,
-}
+# MIGRATION_MODULES = {
+#     "auth": None,
+#     "contenttypes": None,
+#     "sessions": None,
+#     "admin": None,
+# }
 
 
 

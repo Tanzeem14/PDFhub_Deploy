@@ -74,7 +74,7 @@ def convert_pdf_to_images(pdf_file, output_dir):
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    images = convert_from_path(pdf_file, poppler_path=getattr(settings, "POPPLER_PATH", r"D:\PDFAPPLIBRARY\POPPLER\poppler-24.08.0\Library\bin"))
+    images = convert_from_path(pdf_file, poppler_path=getattr(settings, "POPPLER_PATH", r"C:\Users\lenovo\Downloads\Release-24.08.0-0\poppler-24.08.0\Library\bin"))
     image_paths = []
 
     for i, image in enumerate(images):

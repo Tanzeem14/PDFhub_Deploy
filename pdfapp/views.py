@@ -1,3 +1,4 @@
+from venv import logger
 from django.shortcuts import render, redirect
 import re
 import jwt # Import JWT library
@@ -163,64 +164,7 @@ def compress(request):
     return render(request, "compress.html")
 
 
-# def convert(request):
-#     """
-#     Handle PDF conversion requests.
-#     """
-#     if request.method == "POST":
-#         uploaded_file = request.FILES.get("pdf_file")
-#         format_option = request.POST.get("format_option")
-
-#         if not uploaded_file:
-#             messages.error(request, "Please upload a PDF file.")
-#             return redirect("convert")
-
-#         # Save the uploaded file temporarily
-#         temp_dir = os.path.join(settings.MEDIA_ROOT, "temp")
-#         if not os.path.exists(temp_dir):
-#             os.makedirs(temp_dir)
-
-#         temp_pdf_path = os.path.join(temp_dir, uploaded_file.name)
-#         with open(temp_pdf_path, "wb") as temp_file:
-#             for chunk in uploaded_file.chunks():
-#                 temp_file.write(chunk)
-
-#         try:
-#             # Perform the conversion based on the selected format
-#             if format_option == "docx":
-#                 output_file = os.path.join(temp_dir, f"{os.path.splitext(uploaded_file.name)[0]}.docx")
-#                 convert_pdf_to_word(temp_pdf_path, output_file)
-#                 messages.success(request, f"PDF converted to Word successfully! Download: {output_file}")
-#             elif format_option == "jpg":
-#                 output_dir = os.path.join(temp_dir, "images")
-#                 image_paths = convert_pdf_to_images(temp_pdf_path, output_dir)
-#                 # Zip the images for download
-#                 zip_file = os.path.join(temp_dir, "images.zip")
-#                 with zipfile.ZipFile(zip_file, "w") as zf:
-#                     for image_path in image_paths:
-#                         zf.write(image_path, os.path.basename(image_path))
-#                 messages.success(request, f"PDF converted to images successfully! Download: {zip_file}")
-#             elif format_option == "pptx":
-#                 output_file = os.path.join(temp_dir, f"{os.path.splitext(uploaded_file.name)[0]}.pptx")
-#                 convert_pdf_to_pptx(temp_pdf_path, output_file)
-#                 messages.success(request, f"PDF converted to PowerPoint successfully! Download: {output_file}")
-#             else:
-#                 messages.error(request, "Invalid format selected.")
-#                 return redirect("convert")
-#         except Exception as e:
-#             messages.error(request, f"An error occurred during conversion: {str(e)}")
-#             return redirect("convert")
-#         finally:
-#             # Clean up the temporary PDF file
-#             if os.path.exists(temp_pdf_path):
-#                 os.remove(temp_pdf_path)
-
-#     return render(request, "convert.html")
-
-
 from django.utils.html import format_html
-
-
 
 
 def convert(request):
@@ -302,10 +246,19 @@ def merge(request):
 
 
 def edit(request):
-    pass
+    return render(request,'edit.html')
 
 def ai(request):
-    pass
+    return render(request,'ai.html')
+
+def summarization_view(request):
+    return render(request, 'summarization.html')
+
+def translation_view(request):
+    return render(request, 'translation.html')
+
+def chat_view(request):
+    return render(request, 'chat.html')
 
 @require_POST
 def logout(request):

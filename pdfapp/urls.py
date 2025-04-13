@@ -30,4 +30,7 @@ urlpatterns=[
     path('edit/',views.edit,name='edit'),
     path('ai/',views.ai,name='ai'),
     path('logout/',views.logout,name='logout'),
+    path('summarization/', views.summarization_view, name='summarization'),
+    path('translation/', views.translation_view, name='translation'),
+    path('chat/', views.chat_view, name='chat'),
 ]
