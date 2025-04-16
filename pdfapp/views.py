@@ -248,6 +248,11 @@ def merge(request):
 def edit(request):
     return render(request,'edit.html')
 
+def editor_page(request, pdf_path):
+    pdf_url = settings.MEDIA_URL + pdf_path
+    print(f"PDF URL: {pdf_url}")  # Debugging
+    return render(request, 'editor.html', {'pdf_url': pdf_url,'pdf_path': pdf_path})
+
 def ai(request):
     return render(request,'ai.html')
 

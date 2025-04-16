@@ -1,36 +1,32 @@
 from django.urls import path
-# Import the 'path' function from Django's 'urls' module. This function is used to define URL patterns.
-
-from . import views
-# Import the 'views' module from the current package. This allows you to reference view functions defined in 'views.py'.
-
-# import views importing from top pkg
-# This is a comment indicating that you could use an absolute import instead, but it's commented out.
-
+from django.conf import settings
+from django.conf.urls.static import static
 from django.shortcuts import redirect
-# Import the 'redirect' function from Django's 'shortcuts' module. This function is used to redirect users to a different URL.
-
-from .views import register
-# Import the 'register' view function from the 'views' module in the current package.
-# Import the 'update_appointment_status' view function directly from the 'views' module in the current package.
-
 from django.views.generic import TemplateView
-# Import the 'TemplateView' class from Django's 'views.generic' module. This class-based view renders a template.
+from . import views
+from .views import register
+from .utils.edit import download_pdf, open_editor, save_pdf
 
-urlpatterns=[
-    path('register/',views.register,name='register'),
-    path('login/',views.login,name='login'),
-    # path('',views.dashboard,name='dashboard'),
-    path('dashboard/',views.dashboard,name='dashboard'),
-    path('navbar/',views.navbar,name='navbar'),
-    path('logout/',views.logout,name='logout'),
-    path('compress/',views.compress,name='compress'),
-    path('convert/',views.convert,name='convert'),
-    path('merge/',views.merge,name='merge'),
-    path('edit/',views.edit,name='edit'),
-    path('ai/',views.ai,name='ai'),
-    path('logout/',views.logout,name='logout'),
+urlpatterns = [
+    path('register/', views.register, name='register'),
+    path('login/', views.login, name='login'),
+    path('dashboard/', views.dashboard, name='dashboard'),
+    path('navbar/', views.navbar, name='navbar'),
+    path('logout/', views.logout, name='logout'),
+    path('compress/', views.compress, name='compress'),
+    path('convert/', views.convert, name='convert'),
+    path('merge/', views.merge, name='merge'),
+    path('edit/', views.edit, name='edit'),
+    path('editor/<str:pdf_path>/', views.editor_page, name='editor_page'),
+    path('open-editor/', open_editor, name='open_editor'),
+    path('download/<str:pdf_path>/',download_pdf, name='download_pdf'),
+    path('save-pdf/', save_pdf, name='save_pdf'),
+    path('ai/', views.ai, name='ai'),
     path('summarization/', views.summarization_view, name='summarization'),
     path('translation/', views.translation_view, name='translation'),
     path('chat/', views.chat_view, name='chat'),
 ]
+
+# Add media URL patterns in development mode
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
