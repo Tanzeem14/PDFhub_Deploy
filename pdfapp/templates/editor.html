@@ -26,80 +26,91 @@
         <i class="fas fa-save"></i> Save Changes
       </button>
     </div>
+
+    <div id="downloadLinks" style="margin-top: 20px; text-align: center;"></div>
   </div>
 
   <script>
     const saveButton = document.getElementById('savePdfButton');
+    const downloadLinksDiv = document.getElementById('downloadLinks');
     const initialDoc = window.location.origin + "{{ pdf_url|escapejs }}";
+    let pdfPath = "{{ pdf_path|escapejs }}";
     console.log("Initial Document URL:", initialDoc);
+    console.log("PDF Path:", pdfPath);
+
+    // Remove leading 'edited/' if present to avoid duplication in URL
+    if (pdfPath.startsWith('edited/')) {
+      pdfPath = pdfPath.substring('edited/'.length);
+    }
 
     WebViewer({
-      path: '/static/webviewer/lib/', // Path to the WebViewer library
-      initialDoc: initialDoc, // Pass the initial document URL
-      fullAPI: false, // Disable full API if not needed
-    }, document.getElementById('viewer'))
-  .then(instance => {
-    const { documentViewer, annotationManager } = instance.Core;
+      path: '/static/webviewer/lib/',
+      initialDoc: initialDoc,
+      fullAPI: false,  // Express doesn't use full API
+    }, document.getElementById('viewer')).then(instance => {
+      const { documentViewer, annotationManager } = instance.Core;
 
-    // Add a listener for when the document is loaded
-    documentViewer.addEventListener('documentLoaded', () => {
-      console.log('Document loaded successfully!');
-    });
+      // Load existing annotations (XFDF) from 'edited' folder
+      documentViewer.addEventListener('documentLoaded', async () => {
+        console.log('Document loaded successfully!');
+        const xfdfUrl = window.location.origin + "/media/edited/" + pdfPath.replace('.pdf', '.xfdf');
 
-    saveButton.addEventListener('click', async () => {
-      try {
-        // Export annotations and get the updated PDF
-        const xfdfString = await annotationManager.exportAnnotations();
-        const options = { xfdfString };
-        const data = await documentViewer.getDocument().getFileData(options);
-
-        // Create a Blob from the updated PDF data
-        const blob = new Blob([data], { type: 'application/pdf' });
-
-        // Get the original filename or use a default
-        const originalFilename = initialDoc.split('/').pop() || 'edited.pdf';
-
-        // Prepare the form data
-        const formData = new FormData();
-        formData.append('pdf', blob, originalFilename);
-
-        console.log('Sending updated PDF to the server...');
-
-        // Send to server
-        const response = await fetch("{% url 'save_pdf' %}", {
-          method: 'POST',
-          body: formData,
-          headers: {
-            'Accept': 'application/json',
+        try {
+          const response = await fetch(xfdfUrl);
+          if (response.ok) {
+            const xfdfString = await response.text();
+            await annotationManager.importAnnotations(xfdfString);
+            console.log('Annotations loaded from XFDF.');
+          } else {
+            console.log('No XFDF file found for this document.');
           }
-        });
-
-        const result = await response.json();
-        console.log('Server response:', result);
-
-        if (result.success) {
-          // Create a temporary link to trigger download
-          const downloadLink = document.createElement('a');
-          downloadLink.href = result.download_url;
-          downloadLink.target = '_blank';
-          downloadLink.download = originalFilename;
-          document.body.appendChild(downloadLink);
-          downloadLink.click();
-          document.body.removeChild(downloadLink);
-
-          alert('PDF saved successfully!');
-        } else {
-          alert('Error: ' + (result.error || 'Failed to save PDF'));
+        } catch (err) {
+          console.error('Failed to load XFDF:', err);
         }
-      } catch (error) {
-        console.error('Error:', error);
-        alert('An error occurred: ' + error.message);
-      }
+      });
+
+      // Save annotations (XFDF only)
+      saveButton.addEventListener('click', async () => {
+        try {
+          const xfdfString = await annotationManager.exportAnnotations();
+          const originalFilename = initialDoc.split('/').pop() || 'edited.pdf';
+          const xfdfFilename = originalFilename.replace('.pdf', '.xfdf');
+
+          const formData = new FormData();
+          formData.append('xfdf', new Blob([xfdfString], { type: 'text/xml' }), xfdfFilename);
+          formData.append('pdf_path', pdfPath);
+
+          console.log('Sending XFDF annotation data and PDF path to the server...');
+
+          const response = await fetch("{% url 'save_pdf' %}", {
+            method: 'POST',
+            body: formData,
+            headers: { 'Accept': 'application/json' }
+          });
+
+          const result = await response.json();
+          console.log('Server response:', result);
+
+          if (result.success) {
+            alert('Annotations saved successfully!');
+            downloadLinksDiv.innerHTML = `
+              <p>Download your files:</p>
+              <a href="${result.download_url}" download>Download PDF</a> |
+              <a href="${result.xfdf_download_url}" download>Download Annotations (XFDF)</a>
+            `;
+            // Removed redirect to allow download links to be visible
+            // window.location.href = result.editor_url;
+          } else {
+            alert('Error: ' + (result.error || 'Failed to save annotations'));
+          }
+        } catch (error) {
+          console.error('Error:', error);
+          alert('An error occurred: ' + error.message);
+        }
+      });
+    }).catch(error => {
+      console.error('Error loading PDF.js Express:', error);
     });
-  })
-  .catch(error => {
-    console.error('Error loading PDF.js Express:', error);
-  });
   </script>
 </body>
 {% endblock %}

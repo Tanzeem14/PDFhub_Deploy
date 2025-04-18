@@ -251,10 +251,40 @@ def merge(request):
 
 
 
+from django.shortcuts import redirect
+import os
+from django.conf import settings
+
+import os
 def editor_page(request, pdf_path):
-    pdf_url = settings.MEDIA_URL + pdf_path
-    print(f"PDF URL: {pdf_url}")  # Debugging
-    return render(request, 'editor.html', {'pdf_url': pdf_url,'pdf_path': pdf_path})
+    edited_path = os.path.join('edited', pdf_path)
+    edited_full_path = os.path.join(settings.MEDIA_ROOT, edited_path)
+
+    if os.path.exists(edited_full_path):
+        pdf_url = settings.MEDIA_URL + edited_path
+    else:
+        pdf_url = settings.MEDIA_URL + pdf_path
+
+    return render(request, 'editor.html', {'pdf_url': pdf_url, 'pdf_path': pdf_path})
+
+
+# def editor_page(request, pdf_path):
+#     edited_path = os.path.join('edited', pdf_path)
+#     edited_full_path = os.path.join(settings.MEDIA_ROOT, edited_path)
+#     if os.path.exists(edited_full_path):
+#         pdf_url = settings.MEDIA_URL + edited_path
+#     else:
+#         pdf_url = settings.MEDIA_URL + pdf_path
+#     print(f"PDF URL: {pdf_url}")  # Debugging
+#     return render(request, 'editor.html', {'pdf_url': pdf_url,'pdf_path': pdf_path})
+
+def edit_page(request):
+    media_dir = settings.MEDIA_ROOT
+    pdf_files = []
+    for filename in os.listdir(media_dir):
+        if filename.lower().endswith('.pdf'):
+            pdf_files.append(filename)
+    return render(request, 'edit.html', {'pdf_files': pdf_files})
 
 def ai(request):
     return render(request, 'ai.html')
@@ -272,7 +302,39 @@ def summarization_view(request):
             return redirect('summarization')
     return render(request, 'summarization.html')
 
+from django.http import HttpResponse
+from django.conf import settings
+from .utils.trans import translate_pdf
+import os
+
 def translation_view(request):
+    if request.method == 'POST':
+        pdf_file = request.FILES.get('pdf_file')
+        dest_language = request.POST.get('language')
+
+        if not pdf_file or not dest_language:
+            return render(request, 'translation.html', {'error': 'Please provide both PDF file and target language.'})
+
+        # Save uploaded PDF temporarily
+        temp_pdf_path = os.path.join(settings.MEDIA_ROOT, 'temp', pdf_file.name)
+        os.makedirs(os.path.dirname(temp_pdf_path), exist_ok=True)
+        with open(temp_pdf_path, 'wb+') as destination:
+            for chunk in pdf_file.chunks():
+                destination.write(chunk)
+
+        # Translate PDF
+        with open(temp_pdf_path, 'rb') as f:
+            translated_pdf_io = translate_pdf(f, dest_language)
+
+        # Prepare response to download translated PDF
+        response = HttpResponse(translated_pdf_io.read(), content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="translated_{pdf_file.name}"'
+
+        # Clean up temp file
+        os.remove(temp_pdf_path)
+
+        return response
+
     return render(request, 'translation.html')
 
 def chat_view(request):

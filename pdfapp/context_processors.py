@@ -11,8 +11,9 @@ def jwt_user(request):
         try:
             payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
             context['jwt_user'] = {
-                'email': payload['email'],
-                'firstname': payload['firstname']
+                'email': payload.get('email'),
+                'firstname': payload.get('firstname'),
+                'lastname': payload.get('lastname', ''),
             }
         except jwt.ExpiredSignatureError:
             logger.warning("JWT token expired")
