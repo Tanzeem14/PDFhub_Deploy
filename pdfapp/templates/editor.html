@@ -1,0 +1,105 @@
+{% extends "navbar.html" %}
+{% load static %}
+
+{% block content %}
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDF Annotation Tool</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="{% static 'css/editor.css' %}">
+  <script src="{% static 'webviewer/lib/webviewer.min.js' %}"></script>
+</head>
+
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="header-title">Annotate</div>
+    </div>
+
+    <!-- 📄 PDF.js Express Viewer Container -->
+    <div id="viewer" style="height: 90vh; width: 100%; border: 1px solid #ccc;"></div>
+
+    <div style="text-align: center; margin-top: 20px;">
+      <!-- Save Button -->
+      <button type="button" class="action-button" id="savePdfButton">
+        <i class="fas fa-save"></i> Save Changes
+      </button>
+    </div>
+  </div>
+
+  <script>
+    const saveButton = document.getElementById('savePdfButton');
+    const initialDoc = window.location.origin + "{{ pdf_url|escapejs }}";
+    console.log("Initial Document URL:", initialDoc);
+
+    WebViewer({
+      path: '/static/webviewer/lib/', // Path to the WebViewer library
+      initialDoc: initialDoc, // Pass the initial document URL
+      fullAPI: false, // Disable full API if not needed
+    }, document.getElementById('viewer'))
+  .then(instance => {
+    const { documentViewer, annotationManager } = instance.Core;
+
+    // Add a listener for when the document is loaded
+    documentViewer.addEventListener('documentLoaded', () => {
+      console.log('Document loaded successfully!');
+    });
+
+    saveButton.addEventListener('click', async () => {
+      try {
+        // Export annotations and get the updated PDF
+        const xfdfString = await annotationManager.exportAnnotations();
+        const options = { xfdfString };
+        const data = await documentViewer.getDocument().getFileData(options);
+
+        // Create a Blob from the updated PDF data
+        const blob = new Blob([data], { type: 'application/pdf' });
+
+        // Get the original filename or use a default
+        const originalFilename = initialDoc.split('/').pop() || 'edited.pdf';
+
+        // Prepare the form data
+        const formData = new FormData();
+        formData.append('pdf', blob, originalFilename);
+
+        console.log('Sending updated PDF to the server...');
+
+        // Send to server
+        const response = await fetch("{% url 'save_pdf' %}", {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'Accept': 'application/json',
+          }
+        });
+
+        const result = await response.json();
+        console.log('Server response:', result);
+
+        if (result.success) {
+          // Create a temporary link to trigger download
+          const downloadLink = document.createElement('a');
+          downloadLink.href = result.download_url;
+          downloadLink.target = '_blank';
+          downloadLink.download = originalFilename;
+          document.body.appendChild(downloadLink);
+          downloadLink.click();
+          document.body.removeChild(downloadLink);
+
+          alert('PDF saved successfully!');
+        } else {
+          alert('Error: ' + (result.error || 'Failed to save PDF'));
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('An error occurred: ' + error.message);
+      }
+    });
+  })
+  .catch(error => {
+    console.error('Error loading PDF.js Express:', error);
+  });
+  </script>
+</body>
+{% endblock %}
