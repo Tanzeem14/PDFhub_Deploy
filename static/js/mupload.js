@@ -1,4 +1,3 @@
-console.log("merge.js loaded successfully!");
 
 document.getElementById("pdfInput").addEventListener("change", function (event) {
     const files = event.target.files;

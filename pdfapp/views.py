@@ -23,6 +23,13 @@ from io import BytesIO
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from pdfapp.utils.auth import login_required_jwt
 import os
+import logging
+from django.shortcuts import render, redirect
+from django.conf import settings
+from django.contrib import messages
+from django.views.decorators.csrf import csrf_exempt
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -31,7 +38,8 @@ register_table = db.register
 def generate_jwt(user):
     payload={
         'email':user['email'],
-        "firstname":user['firstname'],
+        'firstname':user['firstname'],
+        'lastname':user.get('lastname', ''),  # Default to empty string if not provided
         'exp':datetime.datetime.now(datetime.UTC)+datetime.timedelta(seconds=86400), # Exactly 86400 seconds (1 day)
         'iat':datetime.datetime.now(datetime.UTC), # Time token was issued
     }
@@ -240,7 +248,11 @@ def merge(request):
     return render(request, "merge.html")
 
 
-
+def edit(request):
+    """
+    Render the PDF editing page.
+    """
+    return render(request, "edit.html")
 
 from django.shortcuts import redirect
 import os
@@ -317,9 +329,6 @@ def translation_view(request):
         return response
 
     return render(request, 'translation.html')
-
-def chat_view(request):
-    return render(request, 'chat.html')
 
 @require_POST
 def logout(request):

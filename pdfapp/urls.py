@@ -9,6 +9,7 @@ from .utils.edit import download_pdf, open_editor, save_pdf
 
 urlpatterns = [
     path('', views.register, name='register'),
+    path('', views.register, name='register'),
     path('register/', views.register, name='register'),
     path('login/', views.login, name='login'),
     path('dashboard/', views.dashboard, name='dashboard'),
@@ -25,11 +26,7 @@ urlpatterns = [
     path('ai/', views.ai, name='ai'),
     path('summarization/', views.summarization_view, name='summarization'),
     path('translation/', views.translation_view, name='translation'),
-    path('chat/', views.chat_view, name='chat'),
-    path('adminlogin/', views.admin_login, name='adminlogin'),
-     path('adminpanel/', views.admin_panel, name='adminpanel'),
-    path('adminpanel/register/', views.adminpanel_register, name='adminpanel_register'),
-
+    
 ]
 
 # Add media URL patterns in development mode

@@ -44,11 +44,13 @@
     }
 
     WebViewer({
-      path: '/static/webviewer/lib/',
-      initialDoc: initialDoc,
-      fullAPI: false,  // Express doesn't use full API
-    }, document.getElementById('viewer')).then(instance => {
-      const { documentViewer, annotationManager } = instance.Core;
+      path: '/static/webviewer/lib/', // Path to the WebViewer library
+      initialDoc: initialDoc, // Pass the initial document URL
+      fullAPI: false, // Disable full API if not needed
+      // licenseKey:'F4ItR76MZlSF10qVSc4H',
+    }, document.getElementById('viewer'))
+  .then(instance => {
+    const { documentViewer, annotationManager } = instance.Core;
 
       // Load existing annotations (XFDF) from 'edited' folder
       documentViewer.addEventListener('documentLoaded', async () => {

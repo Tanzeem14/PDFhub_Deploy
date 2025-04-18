@@ -1,3 +1,4 @@
+
 {% load static %}
 <!-- loads static file handling -->
   <!DOCTYPE html>
@@ -14,7 +15,7 @@
         <div class="logo">
             <img src="{% static 'images/logo1.jpeg' %}" alt="Smallpdf Logo"> <!-- Replace with actual logo -->
             
-            <span>PDFhub</span>
+            <span><a href="{% url 'dashboard' %}" style="text-decoration: none; color: inherit;">PDFhub</a></span>
         </div>
         <ul class="nav-links">
           <li class="dropdown">

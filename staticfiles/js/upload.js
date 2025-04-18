@@ -66,4 +66,7 @@ document.getElementById("pdfInput").addEventListener("change", function (event) 
         }, 1000);
     };
 });
+<<<<<<< HEAD
+=======
 
+>>>>>>> 994735b17435d0f1bf4b6af4f9e63b707beddfc1
