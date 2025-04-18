@@ -5,7 +5,7 @@
 </head>
 <div class="container">
   <div class="heading">Sign In</div>
-  <form class="form" action="{% url 'login' %}" method="POST">
+  <form class="form" action="{% url 'adminlogin' %}" method="POST">
     {% csrf_token %}
     {% if messages %}
       {% for message in messages %}

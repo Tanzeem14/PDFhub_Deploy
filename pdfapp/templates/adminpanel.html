@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Simple Admin Panel</title>
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,500&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Roboto', sans-serif;
+      background: #ecf0f5;
+    }
+
+    .wrapper {
+      display: flex;
+    }
+
+    .sidebar {
+      width: 200px;
+      background: #3c8dbc;
+      color: white;
+      height: 100vh;
+      padding-top: 20px;
+    }
+
+    .sidebar h2 {
+      text-align: center;
+      margin-bottom: 30px;
+      font-size: 20px;
+    }
+
+    .sidebar ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .sidebar ul li {
+      padding: 15px 20px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .sidebar ul li:hover {
+      background: #367fa9;
+    }
+
+    .content {
+      flex: 1;
+      padding: 20px;
+    }
+
+    .dashboard {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .box {
+      flex: 1 1 200px;
+      background: black;
+      color: white;
+      padding: 20px;
+      border-radius: 5px;
+      position: relative;
+      min-width: 200px;
+    }
+
+    .box:nth-child(2) { background: #f39c12; }
+    .box:nth-child(3) { background: #dd4b39; }
+    .box:nth-child(4) { background: #00a65a; }
+    .box:nth-child(5) { background: #3c8dbc; }
+    .box:nth-child(6) { background: #d81b60; }
+    .box:nth-child(7) { background: #00a7d0; }
+
+    .box h3 {
+      font-size: 28px;
+      margin: 0;
+    }
+
+    .box p {
+      margin: 5px 0 15px;
+      font-size: 16px;
+    }
+
+    .box a {
+      color: white;
+      text-decoration: underline;
+      position: absolute;
+      bottom: 10px;
+      right: 20px;
+    }
+
+    .header {
+      background: #3c8dbc;
+      color: white;
+      padding: 15px 20px;
+      font-size: 18px;
+    }
+    a {
+      color: white;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    
+  </style>
+</head>
+<body>
+
+
+
+<div class="wrapper">
+  <div class="sidebar">
+    <h2>Master Admin</h2>
+    <ul>
+      <li><a href="{% url 'dashboard' %}">🏠 Home</a></li>
+      <li><a href="{% url 'adminpanel_register' %}">📝 Register</a></li>
+    </ul>
+  </div>
+
+  <div class="content">
+    <h2>Dashboard</h2>
+
+    {% if users %}
+    <h3>Registered Users</h3>
+    <table border="1" cellpadding="10" cellspacing="0" style="width:100%; border-collapse: collapse;">
+      <thead>
+        <tr style="background-color: #3c8dbc; color: white;">
+          <th>First Name</th>
+          <th>Last Name</th>
+          <th>Email</th>
+          <th>Phone Number</th>
+          <th>Created At</th>
+          <th>Updated At</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for user in users %}
+        <tr style="background-color: #ecf0f5;">
+          <td>{{ user.firstname }}</td>
+          <td>{{ user.lastname }}</td>
+          <td>{{ user.email }}</td>
+          <td>{{ user.phone_no }}</td>
+          <td>{{ user.created_at }}</td>
+          <td>{{ user.updated_at }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p>No registered users found.</p>
+    {% endif %}
+
+</div>
+  </div>
+</div>
+
+</body>
+</html>

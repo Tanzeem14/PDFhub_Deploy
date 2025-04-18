@@ -10,8 +10,6 @@ import bcrypt
 import datetime
 from pdfapp.db import db
 from pdfapp.utils.merge import merge_pdfs
-
-import os
 from pdfapp.utils.compress import compress_pdf
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
@@ -25,12 +23,6 @@ from io import BytesIO
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from pdfapp.utils.auth import login_required_jwt
 import os
-import logging
-from django.shortcuts import render, redirect
-from django.conf import settings
-from django.contrib import messages
-
-
 logger = logging.getLogger(__name__)
 
 
@@ -46,7 +38,6 @@ def generate_jwt(user):
     token=jwt.encode(payload,settings.SECRET_KEY,algorithm='HS256')
     return token
 
-from django.contrib import messages  # Ensure this is imported
 
 def register(request):
     if request.method == "POST":
@@ -268,16 +259,6 @@ def editor_page(request, pdf_path):
     return render(request, 'editor.html', {'pdf_url': pdf_url, 'pdf_path': pdf_path})
 
 
-# def editor_page(request, pdf_path):
-#     edited_path = os.path.join('edited', pdf_path)
-#     edited_full_path = os.path.join(settings.MEDIA_ROOT, edited_path)
-#     if os.path.exists(edited_full_path):
-#         pdf_url = settings.MEDIA_URL + edited_path
-#     else:
-#         pdf_url = settings.MEDIA_URL + pdf_path
-#     print(f"PDF URL: {pdf_url}")  # Debugging
-#     return render(request, 'editor.html', {'pdf_url': pdf_url,'pdf_path': pdf_path})
-
 def edit_page(request):
     media_dir = settings.MEDIA_ROOT
     pdf_files = []
@@ -347,3 +328,28 @@ def logout(request):
     messages.success(request, "You have been logged out successfully.")
     return response
 # Other functions remain unchanged
+def admin_login(request):
+    if request.method == "POST":
+        email = request.POST['email'].strip()
+        password = request.POST['password'].strip()
+
+        # Check if the user is an admin
+        if email == "admin@gmail.com" and password == "admin":
+            return redirect("adminpanel")
+            # Generate JWT token for admin
+        else:
+            messages.error(request, "Invalid admin credentials")
+            return redirect("adminlogin")
+    return render(request, "adminsignin.html")
+
+def admin_panel(request):
+    return render(request, "adminpanel.html")
+
+def adminpanel_register(request):
+    users = list(register_table.find({}, {"_id": 0, "password": 0}))
+    return render(request, "adminpanel_register.html", {"users": users})
+
+def adminpanel_register(request):
+    # Fetch all registered users from the database
+    users = list(register_table.find({}, {"_id": 0, "password": 0}))  # Exclude _id and password for security
+    return render(request, "adminpanel.html", {"users": users})
