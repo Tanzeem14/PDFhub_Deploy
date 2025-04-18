@@ -66,3 +66,4 @@ document.getElementById("pdfInput").addEventListener("change", function (event) 
         }, 1000);
     };
 });
+

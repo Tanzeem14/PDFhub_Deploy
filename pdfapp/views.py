@@ -1,38 +1,46 @@
 from venv import logger
 from django.shortcuts import render, redirect
 import re
-import jwt # Import JWT library
-from django.conf import settings # Import settings from Django
-from django.http import HttpResponse, JsonResponse # Import HttpResponse and JsonResponse from Django
+import jwt
+from django.conf import settings
+from django.http import HttpResponse, JsonResponse
 from django.contrib import messages
 import logging
 import bcrypt
 import datetime
 from pdfapp.db import db
-from pdfapp.utils.merge import merge_pdfs # Import the merge_pdfs function from utils.py
-import PyPDF2
+from pdfapp.utils.merge import merge_pdfs
+
 import os
-from pdfapp.utils.compress import compress_pdf  # Import the compress_pdf function
+from pdfapp.utils.compress import compress_pdf
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from django.shortcuts import render
-# logger = logging.getLogger(__name__)
 import logging
-logging.basicConfig(level=logging.WARNING)  # Or logging.ERROR to only show errors
-
-register_table=db.register
-from django.views.decorators.http import require_POST 
+from django.views.decorators.http import require_POST
 from pdfapp.utils.convert import convert_pdf_to_word, convert_pdf_to_images, convert_pdf_to_pptx
-
+from pdfapp.utils.summarize import summarize_pdf
 import zipfile
+from io import BytesIO
+from django.core.files.uploadedfile import InMemoryUploadedFile
+from pdfapp.utils.auth import login_required_jwt
+import os
+import logging
+from django.shortcuts import render, redirect
+from django.conf import settings
+from django.contrib import messages
 
 
+logger = logging.getLogger(__name__)
+
+
+register_table = db.register
 
 def generate_jwt(user):
     payload={
         'email':user['email'],
         "firstname":user['firstname'],
-        'exp':datetime.datetime.now(datetime.UTC)+datetime.timedelta(days=1), # Token expires in 1 day
+        'exp':datetime.datetime.now(datetime.UTC)+datetime.timedelta(seconds=86400), # Exactly 86400 seconds (1 day)
         'iat':datetime.datetime.now(datetime.UTC), # Time token was issued
     }
     token=jwt.encode(payload,settings.SECRET_KEY,algorithm='HS256')
@@ -113,7 +121,15 @@ def login(request):
 
         token = generate_jwt(user)
         response = redirect("dashboard")
-        response.set_cookie("jwt_token", token, httponly=True, max_age=3600)  # Set cookie to expire in 1 hour
+        response.set_cookie(
+            "jwt_token", 
+            token, 
+            httponly=True, 
+            max_age=86400,  # Exactly 86400 seconds (1 day)
+            secure=not settings.DEBUG,  # Secure in production
+            samesite='Lax',
+            path='/'
+        )
         messages.success(request, "Login successful!")
         return response
 
@@ -121,20 +137,8 @@ def login(request):
 
 
 
+@login_required_jwt
 def dashboard(request):
-    token = request.COOKIES.get("jwt_token")
-    if not token:
-        return redirect("login")  # or show some error
-
-    try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
-    
-    except jwt.ExpiredSignatureError:
-        messages.error(request, "Session expired. Please log in again.")
-        return redirect("login")
-    except jwt.InvalidTokenError:
-        messages.error(request, "Invalid token. Please log in again.")
-        return redirect("login")
     return render(request, "dashboard.html")
 def navbar (request):
     return render(request,'navbar.html')
@@ -248,10 +252,21 @@ def merge(request):
 def edit(request):
     return render(request,'edit.html')
 
+
 def ai(request):
-    return render(request,'ai.html')
+    return render(request, 'ai.html')
 
 def summarization_view(request):
+    if request.method == 'POST' and request.FILES.get('pdf_file'):
+        pdf_file = request.FILES['pdf_file']
+        try:
+            summary = summarize_pdf(pdf_file)
+            logger.info("Generated summary.")
+            return render(request, 'summarization.html', {'summary': summary})
+        except Exception as e:
+            logger.error(f"Summarization failed: {e}")
+            messages.error(request, f"Error: {e}")
+            return redirect('summarization')
     return render(request, 'summarization.html')
 
 def translation_view(request):
@@ -266,3 +281,4 @@ def logout(request):
     response.delete_cookie("jwt_token")
     messages.success(request, "You have been logged out successfully.")
     return response
+# Other functions remain unchanged

@@ -6,25 +6,55 @@
 {% block content %}
 <link rel="stylesheet" href="{% static 'css/upload1.css' %}">
 <link rel="stylesheet" href="{% static 'css/loading.css' %}">
-<br><br>
-<h1>Summarize PDF</h1><br>
-<!-- <p>AI meets PDF: Summarize, translate, question, and understand with ease.</p> -->
-<br>
-<br><br><br><br>
-<!-- Messages -->
-{% if messages %}
-  <div class="message-container">
-    {% for message in messages %}
-      <div class="alert {{ message.tags }}">{{ message }}</div>
-    {% endfor %}
+<link rel="stylesheet" href="{% static 'css/summarization.css' %}">
+
+<h1>Summarize PDF</h1>
+
+<form id="summaryForm" method="POST" enctype="multipart/form-data">
+  {% csrf_token %}
+  
+  <div id="uploadSection">
+    <div class="container">
+      <div class="folder">
+        <div class="front-side">
+          <div class="tip"></div>
+          <div class="cover"></div>
+        </div>
+        <div class="back-side cover"></div>
+      </div>
+
+      <label class="custom-file-upload">
+        <input id="pdfInput" type="file" accept="application/pdf" name="pdf_file" required />
+        Choose a file
+      </label>
+    </div>
+
+    <div id="loading" class="loader" style="display: none;">Loading...</div>
+    <div id="pdfPreviewContainer" class="mt-4"></div>
+
+    <button type="submit" class="btn btn-primary mt-3">Summarize</button>
   </div>
+</form>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+<script src="{% static 'js/upload.js' %}" defer></script>
+
+{% if summary %}
+<div class="summary-container mt-4">
+  <h3>Summary:</h3>
+  <textarea class="summary-textarea" readonly>{{ summary }}</textarea>
+</div>
+{% endif %}
+
+{% if messages %}
+  {% for message in messages %}
+    <div class="alert {{ message.tags }}">{{ message }}</div>
+  {% endfor %}
 {% endif %}
 
 <script>
-    setTimeout(() => {
-      const alerts = document.querySelectorAll('.alert');
-      alerts.forEach(alert => alert.style.display = 'none');
-    }, 3000); // hides after 3 seconds
-  </script>
-  
-  {% endblock %}
+setTimeout(() => {
+  const alerts = document.querySelectorAll('.alert');
+  alerts.forEach(alert => alert.style.display = 'none');
+}, 3000);
+</script>
+{% endblock %}
