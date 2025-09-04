@@ -1,0 +1,22 @@
+# Node dependencies
+node_modules/
+
+# sqlite
+db.sqlite3
+
+# Python venv
+venv/
+
+# Environment files
+.env
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE/editor
+.vscode/
+.idea/
