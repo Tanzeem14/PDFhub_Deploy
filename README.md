@@ -1,5 +1,2 @@
-# PDFhub
-Project
-Authors
-Sarita Paliwal
-Tanzeem Hundekari
+# PDFhub_Deploy
+For Deployment purpose
