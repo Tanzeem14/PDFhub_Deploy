@@ -110,14 +110,27 @@ spec:
         }
 
         stage('Login to Nexus Registry') {
-                    steps {
-                        container('dind') {
-                            sh '''
-                                docker login nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085 -u admin -p Changeme@2025
-                            '''
-                        }
-                    }
+            steps {
+                container('dind') {
+                    sh """
+                        echo '🔧 Configuring Docker for insecure registry...'
+
+                        mkdir -p /etc/docker
+                        cat <<EOF > /etc/docker/daemon.json
+        {
+        "insecure-registries" : ["${REGISTRY_HOST}"]
+        }
+        EOF
+
+                        pkill dockerd || true
+                        dockerd-entrypoint.sh --host=tcp://0.0.0.0:2375 &
+                        sleep 12
+
+                        echo '🔐 Logging into Nexus registry...'
+                        docker login nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085 -u admin -p Changeme@2025                    """
                 }
+            }
+        }
         stage('Tag & Push Image to Nexus') {
             steps {
                 container('dind') {
