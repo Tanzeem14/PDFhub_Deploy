@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: pdfhub-container
-        image: pdfhub-web:latest
+        image: nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085/2401067/pdfhub:${BUILD_NUMBER}
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8000
@@ -37,12 +37,12 @@ spec:
         livenessProbe:
           httpGet:
             path: /
-            port: 8000
+          port: 8000
           initialDelaySeconds: 30
           periodSeconds: 10
         readinessProbe:
           httpGet:
             path: /
-            port: 8000
+          port: 8000
           initialDelaySeconds: 10
           periodSeconds: 5

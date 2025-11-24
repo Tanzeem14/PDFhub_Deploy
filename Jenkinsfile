@@ -2,95 +2,99 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = 'pdfhub-web'
-        DOCKER_TAG = "${env.BUILD_NUMBER}"
-        REGISTRY_URL = "http://localhost:8084"
-        K8S_DEPLOYMENT = "pdfhub-app"
-        K8S_NAMESPACE = "default"
-        CONTAINER_NAME = "pdfhub-container"
+        DOCKER_IMAGE = "pdfhub"   // your project image name
+        SONAR_TOKEN = "sqp_5c6bcf57fec846bce3562d1d777b633b4360c411"   // replace with your sonar token
+        REGISTRY = "nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085/2401067"
+        NAMESPACE = "2401067"
     }
 
     stages {
 
-        stage('Checkout') {
+        stage('Checkout Code') {
             steps {
-                echo "Cloning source code..."
                 checkout scm
+                echo "✔ Source code fetched for PDFhub"
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                echo "Building Docker image..."
-                script {
-                    docker.build("${DOCKER_IMAGE}:${DOCKER_TAG}")
-                    docker.build("${DOCKER_IMAGE}:latest")
+                container('dind') {
+                    sh '''
+                        docker build -t ${DOCKER_IMAGE}:${BUILD_NUMBER} -t ${DOCKER_IMAGE}:latest .
+                        docker image ls
+                    '''
                 }
             }
         }
 
-        stage('Run Tests') {
+        stage('Run Tests & Generate Coverage') {
             steps {
-                echo "Running tests (if configured)..."
-                // Add your test commands here
-                // sh 'pytest tests/'
+                container('dind') {
+                    sh '''
+                        docker run --rm \
+                        -v $PWD:/workspace \
+                        -w /workspace \
+                        ${DOCKER_IMAGE}:latest \
+                        pytest --maxfail=1 --disable-warnings --cov=. --cov-report=xml
+                    '''
+                }
             }
         }
 
-        stage('Push to Nexus Docker Registry') {
+        stage('SonarQube Analysis') {
             steps {
-                echo "Pushing Docker images to Nexus Registry..."
-                script {
-                    docker.withRegistry("${REGISTRY_URL}", 'nexus-docker-creds') {
-                        docker.image("${DOCKER_IMAGE}:${DOCKER_TAG}").push()
-                        docker.image("${DOCKER_IMAGE}:latest").push()
+                container('sonar-scanner') {
+                    sh """
+                        sonar-scanner \
+                            -Dsonar.host.url=http://my-sonarqube-sonarqube.sonarqube.svc.cluster.local:9000 \
+                            -Dsonar.login=${SONAR_TOKEN}
+                    """
+                }
+            }
+        }
+
+        stage('Login to Nexus Docker Registry') {
+            steps {
+                container('dind') {
+                    sh """
+                        docker login ${REGISTRY} -u admin -p Changeme@2025
+                    """
+                }
+            }
+        }
+
+        stage('Tag & Push Image to Nexus') {
+            steps {
+                container('dind') {
+                    sh """
+                        docker tag ${DOCKER_IMAGE}:${BUILD_NUMBER} ${REGISTRY}/${DOCKER_IMAGE}:${BUILD_NUMBER}
+                        docker push ${REGISTRY}/${DOCKER_IMAGE}:${BUILD_NUMBER}
+                    """
+                }
+            }
+        }
+
+        stage('Deploy PDFhub to Kubernetes') {
+            steps {
+                container('kubectl') {
+                    script {
+                        dir('k8s-deployment') {
+                            sh """
+                                kubectl apply -f deployment.yaml
+                                kubectl set image deployment/pdfhub-app pdfhub-container=${REGISTRY}/${DOCKER_IMAGE}:${BUILD_NUMBER} -n ${NAMESPACE}
+                                kubectl rollout status deployment/pdfhub-app -n ${NAMESPACE}
+                            """
+                        }
                     }
-                }
-            }
-        }
-
-        stage('Deploy to Kubernetes') {
-            steps {
-                echo "Deploying to Kubernetes..."
-                script {
-
-                    // Update existing deployment
-                    sh """
-                    kubectl set image deployment/${K8S_DEPLOYMENT} \
-                        ${CONTAINER_NAME}=${DOCKER_IMAGE}:${DOCKER_TAG} \
-                        -n ${K8S_NAMESPACE} || true
-                    """
-
-                    // Ensure deployment exists
-                    sh """
-                    kubectl apply -f k8s/deployment.yaml -n ${K8S_NAMESPACE}
-                    """
-
-                    // Apply service if not created
-                    sh """
-                    kubectl apply -f k8s/service.yaml -n ${K8S_NAMESPACE}
-                    """
-
-                    // Check rollout
-                    sh """
-                    kubectl rollout status deployment/${K8S_DEPLOYMENT} -n ${K8S_NAMESPACE}
-                    """
                 }
             }
         }
     }
 
     post {
-        success {
-            echo "PDFHUB CI/CD Pipeline completed successfully! 🎉"
-        }
-        failure {
-            echo "PDFHUB CI/CD Pipeline FAILED ❌"
-        }
-        always {
-            echo "Cleaning up..."
-            // Optional cleanup
-            // sh "docker rmi ${DOCKER_IMAGE}:${DOCKER_TAG} || true"
-        }
+        success { echo "🎉 PDFhub CI/CD Pipeline completed successfully!" }
+        failure { echo "❌ PDFhub CI/CD Pipeline failed" }
+        always { echo "🔄 Pipeline finished" }
     }
 }
