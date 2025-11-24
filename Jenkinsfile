@@ -6,9 +6,13 @@ properties([
 pipeline {
     agent any
 
+    options {
+        skipDefaultCheckout()   // disable default problematic checkout
+    }
+
     environment {
-        DOCKER_IMAGE = "pdfhub"   // your project image name
-        SONAR_TOKEN = "sqp_5c6bcf57fec846bce3562d1d777b633b4360c411"   // replace with your sonar token
+        DOCKER_IMAGE = "pdfhub"
+        SONAR_TOKEN = "sqp_5c6bcf57fec846bce3562d1d777b633b4360c411"  // replace later with Jenkins credentials
         REGISTRY = "nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085/2401067"
         NAMESPACE = "2401067"
     }
@@ -17,15 +21,11 @@ pipeline {
 
         stage('Checkout Code') {
             steps {
-                checkout([
-                    $class: 'GitSCM',
-                    branches: [[name: '*/main']],
-                    userRemoteConfigs: [[url: 'https://github.com/Tanzeem14/PDFhub_Deploy.git']],
-                    extensions: [
-                        [$class: 'CloneOption', shallow: true, depth: 1, noTags: false]
-                    ]
-                ])
-
+                sh '''
+                    rm -rf *
+                    git clone https://github.com/Tanzeem14/PDFhub_Deploy.git .
+                '''
+                echo "✔ PDFhub source code cloned successfully"
             }
         }
 
@@ -107,6 +107,6 @@ pipeline {
     post {
         success { echo "🎉 PDFhub CI/CD Pipeline completed successfully!" }
         failure { echo "❌ PDFhub CI/CD Pipeline failed" }
-        always { echo "🔄 Pipeline finished" }
+        always  { echo "🔄 Pipeline finished" }
     }
 }
