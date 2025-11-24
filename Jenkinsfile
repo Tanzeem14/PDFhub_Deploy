@@ -49,7 +49,8 @@ spec:
     environment {
         DOCKER_IMAGE = "pdfhub"
         SONAR_TOKEN = "sqp_5c6bcf57fec846bce3562d1d777b633b4360c411"
-        REGISTRY = "nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085/2401067"
+        REGISTRY_HOST = "nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085"
+        REGISTRY = "${REGISTRY_HOST}/2401067"
         NAMESPACE = "2401067"
     }
 
@@ -65,13 +66,27 @@ spec:
             }
         }
 
+        /* Run only once — pushes python:3.11-slim to Nexus */
+        stage('Upload Base Python Image to Nexus') {
+            steps {
+                container('dind') {
+                    sh """
+                        docker pull python:3.11-slim
+                        docker tag python:3.11-slim ${REGISTRY}/python:3.11-slim
+                        docker login http://${REGISTRY_HOST} -u admin -p Changeme@2025
+                        docker push ${REGISTRY}/python:3.11-slim
+                    """
+                }
+            }
+        }
+
         stage('Build Docker Image') {
             steps {
                 container('dind') {
-                    sh '''
+                    sh """
                         docker build -t ${DOCKER_IMAGE}:${BUILD_NUMBER} -t ${DOCKER_IMAGE}:latest .
                         docker image ls
-                    '''
+                    """
                 }
             }
         }
@@ -79,13 +94,13 @@ spec:
         stage('Run Tests & Generate Coverage') {
             steps {
                 container('dind') {
-                    sh '''
+                    sh """
                         docker run --rm \
                         -v $PWD:/workspace \
                         -w /workspace \
                         ${DOCKER_IMAGE}:latest \
                         pytest --maxfail=1 --disable-warnings --cov=. --cov-report=xml
-                    '''
+                    """
                 }
             }
         }
@@ -95,9 +110,9 @@ spec:
                 container('sonar-scanner') {
                     sh """
                         sonar-scanner \
-                            -Dsonar.host.url=http://my-sonarqube-sonarqube.sonarqube.svc.cluster.local:9000 \
-                            -Dsonar.login=${SONAR_TOKEN} \
-                            -Dsonar.python.coverage.reportPaths=coverage.xml
+                        -Dsonar.host.url=http://my-sonarqube-sonarqube.sonarqube.svc.cluster.local:9000 \
+                        -Dsonar.token=${SONAR_TOKEN} \
+                        -Dsonar.python.coverage.reportPaths=coverage.xml
                     """
                 }
             }
@@ -107,8 +122,8 @@ spec:
             steps {
                 container('dind') {
                     sh """
-                        docker login http://nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085 -u admin -p Changeme@2025
-                         """
+                        docker login http://${REGISTRY_HOST} -u admin -p Changeme@2025
+                    """
                 }
             }
         }
