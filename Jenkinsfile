@@ -135,6 +135,17 @@ spec:
             steps {
                 container('dind') {
                     sh """
+                        mkdir -p /etc/docker
+                        cat <<EOF > /etc/docker/daemon.json
+        {
+        "insecure-registries" : ["${REGISTRY_HOST}"]
+        }
+        EOF
+
+                        pkill dockerd || true
+                        dockerd-entrypoint.sh --host=tcp://0.0.0.0:2375 &
+                        sleep 12
+
                         docker tag ${DOCKER_IMAGE}:${BUILD_NUMBER} ${REGISTRY}/${DOCKER_IMAGE}:${BUILD_NUMBER}
                         docker push ${REGISTRY}/${DOCKER_IMAGE}:${BUILD_NUMBER}
                     """
