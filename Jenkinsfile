@@ -132,23 +132,12 @@ spec:
             }
         }
         stage('Tag & Push Image to Nexus') {
-            steps {
+              steps {
                 container('dind') {
-                    sh """
-                        mkdir -p /etc/docker
-                        cat <<EOF > /etc/docker/daemon.json
-        {
-        "insecure-registries" : ["${REGISTRY_HOST}"]
-        }
-        EOF
-
-                        pkill dockerd || true
-                        dockerd-entrypoint.sh --host=tcp://0.0.0.0:2375 &
-                        sleep 12
-
-                        docker tag ${DOCKER_IMAGE}:${BUILD_NUMBER} ${REGISTRY}/${DOCKER_IMAGE}:${BUILD_NUMBER}
-                        docker push ${REGISTRY}/${DOCKER_IMAGE}:${BUILD_NUMBER}
-                    """
+                    sh '''
+                        docker tag receipe-nutrition-finder:latest nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085/2401067/pdfhub:v1
+                        docker push nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085/2401067/pdfhub:v1
+                    '''
                 }
             }
         }
