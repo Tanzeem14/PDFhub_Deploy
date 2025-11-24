@@ -6,8 +6,8 @@ properties([
 pipeline {
 
     agent {
-        kubernetes {
-            yaml """
+    kubernetes {
+        yaml """
 apiVersion: v1
 kind: Pod
 spec:
@@ -35,21 +35,13 @@ spec:
     command: ["cat"]
     tty: true
 
-  - name: dind
-    image: docker:dind
-    args: ["--storage-driver=overlay2", "--insecure-registry=nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085"]
-    securityContext:
-     privileged: true
-    env:
-    - name: DOCKER_TLS_CERTDIR
-     value: ""  
-
   volumes:
   - name: workspace-volume
     emptyDir: {}
 """
-        }
     }
+}
+
 
     options {
         skipDefaultCheckout()
@@ -76,11 +68,11 @@ spec:
         }
 
         stage('Build Docker Image') {
-            steps {
-                when {
+            when {
                    changeset "**/*.py"
                 }
 
+            steps {
                 container('dind') {
                     sh """
                         docker build -t ${DOCKER_IMAGE}:${BUILD_NUMBER} -t ${DOCKER_IMAGE}:latest .
