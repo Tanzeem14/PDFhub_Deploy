@@ -35,6 +35,15 @@ spec:
     command: ["cat"]
     tty: true
 
+- name: dind
+    image: docker:dind
+    args: ["--storage-driver=overlay2", "--insecure-registry=nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085"]
+    securityContext:
+      privileged: true
+    env:
+    - name: DOCKER_TLS_CERTDIR
+      value: ""  
+
   volumes:
   - name: workspace-volume
     emptyDir: {}
@@ -68,6 +77,10 @@ spec:
 
         stage('Build Docker Image') {
             steps {
+                when {
+                   changeset "**/*.py"
+                }
+
                 container('dind') {
                     sh """
                         docker build -t ${DOCKER_IMAGE}:${BUILD_NUMBER} -t ${DOCKER_IMAGE}:latest .
@@ -104,16 +117,15 @@ spec:
             }
         }
 
-        stage('Login to Nexus Docker Registry') {
-            steps {
-                container('dind') {
-                    sh """
-                        docker login http://${REGISTRY_HOST} -u admin -p Changeme@2025
-                    """
+        stage('Login to Nexus Registry') {
+                    steps {
+                        container('dind') {
+                            sh '''
+                                docker login nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085 -u admin -p Changeme@2025
+                            '''
+                        }
+                    }
                 }
-            }
-        }
-
         stage('Tag & Push Image to Nexus') {
             steps {
                 container('dind') {
