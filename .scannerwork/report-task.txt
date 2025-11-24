@@ -1,0 +1,6 @@
+projectKey=PDF_IMCC
+serverUrl=http://localhost:9000
+serverVersion=25.9.0.112764
+dashboardUrl=http://localhost:9000/dashboard?id=PDF_IMCC
+ceTaskId=664c54dd-039e-413b-a02a-641f64d4862e
+ceTaskUrl=http://localhost:9000/api/ce/task?id=664c54dd-039e-413b-a02a-641f64d4862e
