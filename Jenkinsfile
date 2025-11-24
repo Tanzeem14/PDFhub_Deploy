@@ -66,9 +66,6 @@ spec:
         }
 
         stage('Build Docker Image') {
-            when {
-                changeset "**/pdfapp/**"
-                }
             steps {
                 container('dind') {
                     sh '''
