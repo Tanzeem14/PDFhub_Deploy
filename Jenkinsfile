@@ -35,14 +35,14 @@ spec:
     command: ["cat"]
     tty: true
 
-- name: dind
+  - name: dind
     image: docker:dind
     args: ["--storage-driver=overlay2", "--insecure-registry=nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085"]
     securityContext:
-      privileged: true
+     privileged: true
     env:
     - name: DOCKER_TLS_CERTDIR
-      value: ""  
+     value: ""  
 
   volumes:
   - name: workspace-volume
