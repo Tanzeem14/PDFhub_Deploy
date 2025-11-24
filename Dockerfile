@@ -3,7 +3,7 @@
 # -----------------------------
 FROM nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085/2401067/python:3.11-slim
 
-FROM python:3.11-slim
+# FROM python:3.11-slim
 
 # -----------------------------
 # Stage 2: Environment settings
