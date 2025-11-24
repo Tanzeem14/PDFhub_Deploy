@@ -68,9 +68,9 @@ spec:
         }
 
         stage('Build Docker Image') {
-            when {
-                   changeset "**/*.py"
-                }
+            // when {
+            //        changeset "**/*.py"
+            //     }
 
             steps {
                 container('dind') {
