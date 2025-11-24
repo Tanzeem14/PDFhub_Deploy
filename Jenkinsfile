@@ -1,3 +1,8 @@
+properties([
+  pipelineTriggers([]),
+  durabilityHint('PERFORMANCE_OPTIMIZED')
+])
+
 pipeline {
     agent any
 
@@ -12,8 +17,15 @@ pipeline {
 
         stage('Checkout Code') {
             steps {
-                checkout scm
-                echo "✔ Source code fetched for PDFhub"
+                checkout([
+                    $class: 'GitSCM',
+                    branches: [[name: '*/main']],
+                    userRemoteConfigs: [[url: 'https://github.com/Tanzeem14/PDFhub_Deploy.git']],
+                    extensions: [
+                        [$class: 'CloneOption', shallow: true, depth: 1, noTags: false]
+                    ]
+                ])
+
             }
         }
 
