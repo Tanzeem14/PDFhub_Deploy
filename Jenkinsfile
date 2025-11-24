@@ -4,15 +4,51 @@ properties([
 ])
 
 pipeline {
-    agent any
+
+    agent {
+        kubernetes {
+            yaml """
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: dind
+    image: docker:dind
+    securityContext:
+      privileged: true
+    command: ["dockerd-entrypoint.sh"]
+    args: ["--host=tcp://0.0.0.0:2375"]
+    env:
+    - name: DOCKER_TLS_CERTDIR
+      value: ""
+    volumeMounts:
+    - mountPath: /home/jenkins/agent
+      name: workspace-volume
+
+  - name: sonar-scanner
+    image: sonarsource/sonar-scanner-cli
+    command: ["cat"]
+    tty: true
+
+  - name: kubectl
+    image: bitnami/kubectl:latest
+    command: ["cat"]
+    tty: true
+
+  volumes:
+  - name: workspace-volume
+    emptyDir: {}
+"""
+        }
+    }
 
     options {
-        skipDefaultCheckout()   // disable default problematic checkout
+        skipDefaultCheckout()
     }
 
     environment {
         DOCKER_IMAGE = "pdfhub"
-        SONAR_TOKEN = "sqp_5c6bcf57fec846bce3562d1d777b633b4360c411"  // replace later with Jenkins credentials
+        SONAR_TOKEN = "sqp_5c6bcf57fec846bce3562d1d777b633b4360c411"
         REGISTRY = "nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085/2401067"
         NAMESPACE = "2401067"
     }
@@ -25,7 +61,7 @@ pipeline {
                     rm -rf *
                     git clone https://github.com/Tanzeem14/PDFhub_Deploy.git .
                 '''
-                echo "✔ PDFhub source code cloned successfully"
+                echo "✔ Source code cloned successfully"
             }
         }
 
@@ -60,7 +96,8 @@ pipeline {
                     sh """
                         sonar-scanner \
                             -Dsonar.host.url=http://my-sonarqube-sonarqube.sonarqube.svc.cluster.local:9000 \
-                            -Dsonar.login=${SONAR_TOKEN}
+                            -Dsonar.login=${SONAR_TOKEN} \
+                            -Dsonar.python.coverage.reportPaths=coverage.xml
                     """
                 }
             }
@@ -90,15 +127,11 @@ pipeline {
         stage('Deploy PDFhub to Kubernetes') {
             steps {
                 container('kubectl') {
-                    script {
-                        dir('k8s-deployment') {
-                            sh """
-                                kubectl apply -f deployment.yaml
-                                kubectl set image deployment/pdfhub-app pdfhub-container=${REGISTRY}/${DOCKER_IMAGE}:${BUILD_NUMBER} -n ${NAMESPACE}
-                                kubectl rollout status deployment/pdfhub-app -n ${NAMESPACE}
-                            """
-                        }
-                    }
+                    sh """
+                        kubectl apply -f k8s-deployment/deployment.yaml
+                        kubectl set image deployment/pdfhub-app pdfhub-container=${REGISTRY}/${DOCKER_IMAGE}:${BUILD_NUMBER} -n ${NAMESPACE}
+                        kubectl rollout status deployment/pdfhub-app -n ${NAMESPACE}
+                    """
                 }
             }
         }
