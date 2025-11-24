@@ -66,20 +66,6 @@ spec:
             }
         }
 
-        /* Run only once — pushes python:3.11-slim to Nexus */
-        stage('Upload Base Python Image to Nexus') {
-            steps {
-                container('dind') {
-                    sh """
-                        docker pull python:3.11-slim
-                        docker tag python:3.11-slim ${REGISTRY}/python:3.11-slim
-                        docker login http://${REGISTRY_HOST} -u admin -p Changeme@2025
-                        docker push ${REGISTRY}/python:3.11-slim
-                    """
-                }
-            }
-        }
-
         stage('Build Docker Image') {
             steps {
                 container('dind') {
