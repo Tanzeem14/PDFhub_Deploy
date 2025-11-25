@@ -17,7 +17,9 @@ spec:
     securityContext:
       privileged: true
     command: ["dockerd-entrypoint.sh"]
-    args: ["--host=tcp://0.0.0.0:2375"]
+    args:
+      - "--host=tcp://0.0.0.0:2375"
+      - "--insecure-registry=nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085"
     env:
     - name: DOCKER_TLS_CERTDIR
       value: ""
@@ -104,23 +106,10 @@ spec:
             }
         }
 
-        stage('Login & Configure Docker for Nexus') {
+        stage('Login to Nexus Registry') {
             steps {
                 container('dind') {
                     sh """
-                        echo '🔧 Configuring Docker for insecure Nexus registry...'
-
-                        mkdir -p /etc/docker
-                        cat <<EOF > /etc/docker/daemon.json
-{
-  "insecure-registries" : ["${REGISTRY_HOST}"]
-}
-EOF
-
-                        pkill dockerd || true
-                        dockerd-entrypoint.sh --host=tcp://0.0.0.0:2375 &
-                        sleep 12
-
                         echo '🔐 Logging into Nexus registry...'
                         docker login ${REGISTRY_HOST} -u admin -p Changeme@2025
                     """
