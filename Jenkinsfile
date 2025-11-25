@@ -6,8 +6,8 @@ properties([
 pipeline {
 
     agent {
-    kubernetes {
-        yaml """
+        kubernetes {
+            yaml """
 apiVersion: v1
 kind: Pod
 spec:
@@ -39,9 +39,8 @@ spec:
   - name: workspace-volume
     emptyDir: {}
 """
+        }
     }
-}
-
 
     options {
         skipDefaultCheckout()
@@ -68,10 +67,6 @@ spec:
         }
 
         stage('Build Docker Image') {
-            // when {
-            //        changeset "**/*.py"
-            //     }
-
             steps {
                 container('dind') {
                     sh """
@@ -109,34 +104,40 @@ spec:
             }
         }
 
-        stage('Login to Nexus Registry') {
+        stage('Login & Configure Docker for Nexus') {
             steps {
                 container('dind') {
                     sh """
-                        echo '🔧 Configuring Docker for insecure registry...'
+                        echo '🔧 Configuring Docker for insecure Nexus registry...'
 
                         mkdir -p /etc/docker
                         cat <<EOF > /etc/docker/daemon.json
-        {
-        "insecure-registries" : ["${REGISTRY_HOST}"]
-        }
-        EOF
+{
+  "insecure-registries" : ["${REGISTRY_HOST}"]
+}
+EOF
 
                         pkill dockerd || true
                         dockerd-entrypoint.sh --host=tcp://0.0.0.0:2375 &
                         sleep 12
 
                         echo '🔐 Logging into Nexus registry...'
-                        docker login nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085 -u admin -p Changeme@2025                    """
+                        docker login ${REGISTRY_HOST} -u admin -p Changeme@2025
+                    """
                 }
             }
         }
-        stage('Tag & Push Image to Nexus') {
-              steps {
+
+        stage('Tag & Push Docker Image to Nexus') {
+            steps {
                 container('dind') {
-                    sh '''
-                        docker tag pdfhub:latest nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085/2401067/pdfhub:v1
-                        docker push http://nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085/2401067/pdfhub:v1                    '''
+                    sh """
+                        echo '📌 Tagging image...'
+                        docker tag ${DOCKER_IMAGE}:${BUILD_NUMBER} ${REGISTRY}/${DOCKER_IMAGE}:${BUILD_NUMBER}
+
+                        echo '📤 Pushing image to Nexus...'
+                        docker push ${REGISTRY}/${DOCKER_IMAGE}:${BUILD_NUMBER}
+                    """
                 }
             }
         }
