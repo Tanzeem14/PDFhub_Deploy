@@ -136,8 +136,7 @@ spec:
                 container('dind') {
                     sh '''
                         docker tag pdfhub:latest nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085/2401067/pdfhub:v1
-                        docker push nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085/2401067/pdfhub:v1
-                    '''
+                        docker push http://nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085/2401067/pdfhub:v1                    '''
                 }
             }
         }
