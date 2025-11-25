@@ -98,13 +98,14 @@ spec:
                 container('sonar-scanner') {
                     sh """
                         sonar-scanner \
-                        -Dsonar.host.url=http://my-sonarqube-sonarqube.sonarqube.svc.cluster.local:9000 \
+                        -Dsonar.host.url=http://sonarqube-sonarqube.sonarqube.svc.cluster.local:9000 \
                         -Dsonar.token=${SONAR_TOKEN} \
                         -Dsonar.python.coverage.reportPaths=coverage.xml
                     """
                 }
             }
         }
+
 
         stage('Login to Nexus Registry') {
             steps {
