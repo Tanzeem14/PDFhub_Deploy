@@ -93,27 +93,38 @@ spec:
             }
         }
 
+        // stage('SonarQube Analysis') {
+        //     steps {
+        //         container('sonar-scanner') {
+        //             sh """
+        //                 sonar-scanner \
+        //                 -Dsonar.host.url=http://sonarqube-sonarqube.sonarqube.svc.cluster.local:9000 \
+        //                 -Dsonar.token=${SONAR_TOKEN} \
+        //                 -Dsonar.python.coverage.reportPaths=coverage.xml
+        //             """
+        //         }
+        //     }
+        // }
         stage('SonarQube Analysis') {
-            steps {
-                container('sonar-scanner') {
-                    sh """
-                        sonar-scanner \
-                        -Dsonar.host.url=http://sonarqube-sonarqube.sonarqube.svc.cluster.local:9000 \
-                        -Dsonar.token=${SONAR_TOKEN} \
-                        -Dsonar.python.coverage.reportPaths=coverage.xml
-                    """
+                    steps {
+                        container('sonar-scanner') {
+                            sh '''
+                                sonar-scanner \
+                                    -Dsonar.projectKey=2401067_PDFhub \
+                                    -Dsonar.sources=. \
+                                    -Dsonar.host.url=http://my-sonarqube-sonarqube.sonarqube.svc.cluster.local:9000 \
+                                    -Dsonar.login=sqp_5c6bcf57fec846bce3562d1d777b633b4360c411
+                            '''
+                        }
+                    }
                 }
-            }
-        }
-
 
         stage('Login to Nexus Registry') {
             steps {
                 container('dind') {
-                    sh """
-                        echo '🔐 Logging into Nexus registry...'
-                        docker login ${REGISTRY_HOST} -u admin -p Changeme@2025
-                    """
+                    sh '''
+                        docker login nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085 -u admin -p Changeme@2025
+                    '''
                 }
             }
         }
