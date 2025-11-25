@@ -135,7 +135,7 @@ spec:
               steps {
                 container('dind') {
                     sh '''
-                        docker tag receipe-nutrition-finder:latest nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085/2401067/pdfhub:v1
+                        docker tag pdfhub:latest nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085/2401067/pdfhub:v1
                         docker push nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085/2401067/pdfhub:v1
                     '''
                 }
