@@ -14,12 +14,17 @@ spec:
       labels:
         app: pdfhub
     spec:
+      imagePullSecrets:
+        - name: nexus-secret
+
       containers:
       - name: pdfhub-container
-        image: nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085/2401067/pdfhub:${BUILD_NUMBER}
-        imagePullPolicy: IfNotPresent
+        image: nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085/2401067/pdfhub:latest
+        imagePullPolicy: Always
+
         ports:
         - containerPort: 8000
+
         env:
         - name: PYTHONUNBUFFERED
           value: "1"
@@ -27,6 +32,7 @@ spec:
           value: "pdfhub.settings"
         - name: MONGO_URI
           value: "mongodb://pdfhub-mongo:27017"
+
         resources:
           requests:
             memory: "512Mi"
@@ -34,15 +40,17 @@ spec:
           limits:
             memory: "1Gi"
             cpu: "500m"
+
         livenessProbe:
           httpGet:
             path: /
-          port: 8000
+            port: 8000
           initialDelaySeconds: 30
           periodSeconds: 10
+
         readinessProbe:
           httpGet:
             path: /
-          port: 8000
+            port: 8000
           initialDelaySeconds: 10
           periodSeconds: 5

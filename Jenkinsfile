@@ -12,6 +12,7 @@ apiVersion: v1
 kind: Pod
 spec:
   containers:
+
   - name: dind
     image: docker:dind
     securityContext:
@@ -36,6 +37,9 @@ spec:
     image: bitnami/kubectl:latest
     command: ["cat"]
     tty: true
+    securityContext:
+      runAsUser: 0
+      readOnlyRootFilesystem: false
 
   volumes:
   - name: workspace-volume
@@ -64,7 +68,6 @@ spec:
                     rm -rf *
                     git clone https://github.com/Tanzeem14/PDFhub_Deploy.git .
                 '''
-                echo "✔ Source code cloned successfully"
             }
         }
 
@@ -79,83 +82,66 @@ spec:
             }
         }
 
-        stage('Run Tests & Generate Coverage') {
+        stage('Run Tests') {
             steps {
                 container('dind') {
                     sh """
                         docker run --rm \
-                        -v $PWD:/workspace \
+                        -v \$PWD:/workspace \
                         -w /workspace \
                         ${DOCKER_IMAGE}:latest \
-                        pytest --maxfail=1 --disable-warnings --cov=. --cov-report=xml
+                        pytest --maxfail=1 --disable-warnings
                     """
                 }
             }
         }
 
-        // stage('SonarQube Analysis') {
-        //     steps {
-        //         container('sonar-scanner') {
-        //             sh """
-        //                 sonar-scanner \
-        //                 -Dsonar.host.url=http://sonarqube-sonarqube.sonarqube.svc.cluster.local:9000 \
-        //                 -Dsonar.token=${SONAR_TOKEN} \
-        //                 -Dsonar.python.coverage.reportPaths=coverage.xml
-        //             """
-        //         }
-        //     }
-        // }
         stage('SonarQube Analysis') {
-                    steps {
-                        container('sonar-scanner') {
-                            sh '''
-                                sonar-scanner \
-                                    -Dsonar.projectKey=2401067_PDFhub \
-                                    -Dsonar.sources=. \
-                                    -Dsonar.host.url=http://my-sonarqube-sonarqube.sonarqube.svc.cluster.local:9000 \
-                                    -Dsonar.login=sqp_5c6bcf57fec846bce3562d1d777b633b4360c411
-                            '''
-                        }
-                    }
-                }
-
-        stage('Login to Nexus Registry') {
             steps {
-                container('dind') {
+                container('sonar-scanner') {
                     sh '''
-                        docker login nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085 -u admin -p Changeme@2025
+                        sonar-scanner \
+                            -Dsonar.projectKey=2401067_PDFhub \
+                            -Dsonar.sources=. \
+                            -Dsonar.host.url=http://my-sonarqube-sonarqube.sonarqube.svc.cluster.local:9000 \
+                            -Dsonar.login=sqp_5c6bcf57fec846bce3562d1d777b633b4360c411
                     '''
                 }
             }
         }
 
-        stage('Tag & Push Docker Image to Nexus') {
+        stage('Login to Nexus') {
             steps {
                 container('dind') {
                     sh """
-                        echo '📌 Tagging image...'
-                        docker tag ${DOCKER_IMAGE}:${BUILD_NUMBER} ${REGISTRY}/${DOCKER_IMAGE}:${BUILD_NUMBER}
+                        docker login ${REGISTRY_HOST} -u admin -p Changeme@2025
+                    """
+                }
+            }
+        }
 
-                        echo '📤 Pushing image to Nexus...'
+        stage('Push Image') {
+            steps {
+                container('dind') {
+                    sh """
+                        docker tag ${DOCKER_IMAGE}:${BUILD_NUMBER} ${REGISTRY}/${DOCKER_IMAGE}:${BUILD_NUMBER}
                         docker push ${REGISTRY}/${DOCKER_IMAGE}:${BUILD_NUMBER}
                     """
                 }
             }
         }
 
-        stage('Create Namespace') {
+        stage('Create Namespace + Secret') {
             steps {
                 container('kubectl') {
                     sh """
-                        # 1. Create namespace if it doesn't exist
-                        kubectl get namespace 2401067 || kubectl create namespace 2401067
+                        kubectl get namespace ${NAMESPACE} || kubectl create namespace ${NAMESPACE}
 
-                        # 2. Create Docker Registry Secret
                         kubectl create secret docker-registry nexus-secret \
-                          --docker-server=${NEXUS_REGISTRY} \
+                          --docker-server=${REGISTRY_HOST} \
                           --docker-username=admin \
                           --docker-password=Changeme@2025 \
-                          --namespace=2401067 \
+                          --namespace=${NAMESPACE} \
                           --dry-run=client -o yaml | kubectl apply -f -
                     """
                 }
@@ -165,24 +151,17 @@ spec:
         stage('Deploy to Kubernetes') {
             steps {
                 container('kubectl') {
-                    dir('K8s-deployment') { 
+                    dir('K8s-deployment') {
                         sh """
-                            # Update deployment.yaml to use the image with the current BUILD_NUMBER
-                            # Ensure your deployment.yaml has 'image: .../client:latest' for this sed to work
-                            sed -i "s|client:latest|${NEXUS_REGISTRY}/${REPO_NAME}/${IMAGE_NAME}:${BUILD_NUMBER}|g" deployment.yaml
-                            
-                            kubectl apply -f deployment.yaml
-                            
-                            # Give it a moment to start
+                            kubectl apply -f deployment.yaml -n ${NAMESPACE}
                             sleep 5
-                            kubectl get pods -n 2401067
+                            kubectl get pods -n ${NAMESPACE}
                         """
+                    }
                 }
             }
         }
     }
-}
-
 
     post {
         success { echo "🎉 PDFhub CI/CD Pipeline completed successfully!" }
