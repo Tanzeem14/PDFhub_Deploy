@@ -143,14 +143,40 @@ spec:
             }
         }
 
-        stage('Deploy PDFhub to Kubernetes') {
+        stage('Create Namespace') {
             steps {
                 container('kubectl') {
                     sh """
-                        kubectl apply -f k8s-deployment/deployment.yaml
-                        kubectl set image deployment/pdfhub-app pdfhub-container=${REGISTRY}/${DOCKER_IMAGE}:${BUILD_NUMBER} -n ${NAMESPACE}
-                        kubectl rollout status deployment/pdfhub-app -n ${NAMESPACE}
+                        # 1. Create namespace if it doesn't exist
+                        kubectl get namespace 2401067 || kubectl create namespace 2401067
+
+                        # 2. Create Docker Registry Secret
+                        kubectl create secret docker-registry nexus-secret \
+                          --docker-server=${NEXUS_REGISTRY} \
+                          --docker-username=admin \
+                          --docker-password=Changeme@2025 \
+                          --namespace=2401067 \
+                          --dry-run=client -o yaml | kubectl apply -f -
                     """
+                }
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                container('kubectl') {
+                    dir('K8s-deployment') { 
+                        sh """
+                            # Update deployment.yaml to use the image with the current BUILD_NUMBER
+                            # Ensure your deployment.yaml has 'image: .../client:latest' for this sed to work
+                            sed -i "s|client:latest|${NEXUS_REGISTRY}/${REPO_NAME}/${IMAGE_NAME}:${BUILD_NUMBER}|g" deployment.yaml
+                            
+                            kubectl apply -f deployment.yaml
+                            
+                            # Give it a moment to start
+                            sleep 5
+                            kubectl get pods -n 2401067
+                        """
                 }
             }
         }
