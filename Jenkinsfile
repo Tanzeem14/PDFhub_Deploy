@@ -181,6 +181,8 @@ spec:
             }
         }
     }
+}
+
 
     post {
         success { echo "🎉 PDFhub CI/CD Pipeline completed successfully!" }
