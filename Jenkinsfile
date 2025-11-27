@@ -22,11 +22,13 @@ spec:
       - "--host=tcp://0.0.0.0:2375"
       - "--insecure-registry=nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085"
     env:
-    - name: DOCKER_TLS_CERTDIR
-      value: ""
+      - name: DOCKER_TLS_CERTDIR
+        value: ""
     volumeMounts:
-    - mountPath: /home/jenkins/agent
-      name: workspace-volume
+      - name: docker-storage
+        mountPath: /var/lib/docker
+      - name: workspace-volume
+        mountPath: /home/jenkins/agent
 
   - name: sonar-scanner
     image: sonarsource/sonar-scanner-cli
@@ -42,8 +44,10 @@ spec:
       readOnlyRootFilesystem: false
 
   volumes:
-  - name: workspace-volume
-    emptyDir: {}
+    - name: docker-storage
+      emptyDir: {}
+    - name: workspace-volume
+      emptyDir: {}
 """
         }
     }
@@ -54,10 +58,10 @@ spec:
 
     environment {
         DOCKER_IMAGE = "pdfhub"
-        SONAR_TOKEN = "sqp_5c6bcf57fec846bce3562d1d777b633b4360c411"
         REGISTRY_HOST = "nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085"
         REGISTRY = "${REGISTRY_HOST}/2401067"
         NAMESPACE = "2401067"
+        SONAR_TOKEN = "sqp_5c6bcf57fec846bce3562d1d777b633b4360c411"
     }
 
     stages {
@@ -86,11 +90,7 @@ spec:
             steps {
                 container('dind') {
                     sh """
-                        docker run --rm \
-                        -v \$PWD:/workspace \
-                        -w /workspace \
-                        ${DOCKER_IMAGE}:latest \
-                        pytest --maxfail=1 --disable-warnings
+                        docker run --rm ${DOCKER_IMAGE}:latest pytest --maxfail=1 --disable-warnings
                     """
                 }
             }
@@ -99,13 +99,13 @@ spec:
         stage('SonarQube Analysis') {
             steps {
                 container('sonar-scanner') {
-                    sh '''
+                    sh """
                         sonar-scanner \
-                            -Dsonar.projectKey=2401067_PDFhub \
-                            -Dsonar.sources=. \
-                            -Dsonar.host.url=http://my-sonarqube-sonarqube.sonarqube.svc.cluster.local:9000 \
-                            -Dsonar.login=sqp_5c6bcf57fec846bce3562d1d777b633b4360c411
-                    '''
+                          -Dsonar.projectKey=2401067_PDFhub \
+                          -Dsonar.sources=. \
+                          -Dsonar.host.url=http://my-sonarqube-sonarqube.sonarqube.svc.cluster.local:9000 \
+                          -Dsonar.login=${SONAR_TOKEN}
+                    """
                 }
             }
         }
