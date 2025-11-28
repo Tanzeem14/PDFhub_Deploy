@@ -52,9 +52,7 @@ spec:
         }
     }
 
-    options {
-        skipDefaultCheckout()
-    }
+    options { skipDefaultCheckout() }
 
     environment {
         DOCKER_IMAGE = "pdfhub"
@@ -121,7 +119,6 @@ spec:
                         docker push ${REGISTRY}/${DOCKER_IMAGE}:latest
 
                         docker pull ${REGISTRY}/${DOCKER_IMAGE}:${BUILD_NUMBER}
-
                         docker image ls
                     """
                 }
@@ -134,15 +131,10 @@ spec:
                     dir('K8s-deployment') {
                         sh """
                             kubectl apply -f deployment.yaml -n ${NAMESPACE}
-
-                            # wait for rollout
                             kubectl rollout status deployment/pdfhub-deployment -n ${NAMESPACE}
-
                             kubectl get pods -n ${NAMESPACE}
                         """
-                        }
                     }
-                    
                 }
             }
         }
