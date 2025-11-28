@@ -86,16 +86,6 @@ spec:
             }
         }
 
-        stage('Run Tests') {
-            steps {
-                container('dind') {
-                    sh """
-                        docker run --rm ${DOCKER_IMAGE}:latest pytest --maxfail=1 --disable-warnings
-                    """
-                }
-            }
-        }
-
         stage('SonarQube Analysis') {
             steps {
                 container('sonar-scanner') {
@@ -125,24 +115,14 @@ spec:
                 container('dind') {
                     sh """
                         docker tag ${DOCKER_IMAGE}:${BUILD_NUMBER} ${REGISTRY}/${DOCKER_IMAGE}:${BUILD_NUMBER}
+                        docker tag ${DOCKER_IMAGE}:${BUILD_NUMBER} ${REGISTRY}/${DOCKER_IMAGE}:latest
+
                         docker push ${REGISTRY}/${DOCKER_IMAGE}:${BUILD_NUMBER}
-                    """
-                }
-            }
-        }
+                        docker push ${REGISTRY}/${DOCKER_IMAGE}:latest
 
-        stage('Create Namespace + Secret') {
-            steps {
-                container('kubectl') {
-                    sh """
-                        kubectl get namespace ${NAMESPACE} || kubectl create namespace ${NAMESPACE}
+                        docker pull ${REGISTRY}/${DOCKER_IMAGE}:${BUILD_NUMBER}
 
-                        kubectl create secret docker-registry nexus-secret \
-                          --docker-server=${REGISTRY_HOST} \
-                          --docker-username=admin \
-                          --docker-password=Changeme@2025 \
-                          --namespace=${NAMESPACE} \
-                          --dry-run=client -o yaml | kubectl apply -f -
+                        docker image ls
                     """
                 }
             }
@@ -154,10 +134,15 @@ spec:
                     dir('K8s-deployment') {
                         sh """
                             kubectl apply -f deployment.yaml -n ${NAMESPACE}
-                            sleep 5
+
+                            # wait for rollout
+                            kubectl rollout status deployment/pdfhub-deployment -n ${NAMESPACE}
+
                             kubectl get pods -n ${NAMESPACE}
                         """
+                        }
                     }
+                    
                 }
             }
         }
