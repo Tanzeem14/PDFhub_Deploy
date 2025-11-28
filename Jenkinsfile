@@ -128,7 +128,7 @@ spec:
         stage('Deploy to Kubernetes') {
             steps {
                 container('kubectl') {
-                    dir('K8s-deployment') {
+                    dir('k8s-deployment') {
                         sh """
                             kubectl apply -f deployment.yaml -n ${NAMESPACE}
                             kubectl rollout status deployment/pdfhub-deployment -n ${NAMESPACE}
