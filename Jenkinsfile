@@ -131,8 +131,7 @@ spec:
                     dir('k8s-deployment') {
                         sh """
                             kubectl apply -f deployment.yaml -n ${NAMESPACE}
-                            kubectl rollout status deployment/pdfhub-deployment -n ${NAMESPACE}
-                            kubectl get pods -n ${NAMESPACE}
+                            
                         """
                     }
                 }

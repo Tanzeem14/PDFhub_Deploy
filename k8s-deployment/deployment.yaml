@@ -30,7 +30,7 @@ metadata:
   name: pdfhub-deployment
   namespace: "2401067"
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: pdfhub
