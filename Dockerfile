@@ -55,4 +55,4 @@ COPY . /app/
 EXPOSE 8000
 
 # Development (switch to gunicorn for prod)
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "pdfhub.wsgi:application"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "project.wsgi:application"]
