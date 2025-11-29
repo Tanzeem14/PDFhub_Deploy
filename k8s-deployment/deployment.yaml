@@ -53,10 +53,17 @@ spec:
           env:
             - name: PYTHONUNBUFFERED
               value: "1"
+
+            # Correct Django settings
             - name: DJANGO_SETTINGS_MODULE
               value: "project.settings"
+
             - name: MONGO_URI
               value: "mongodb://pdfhub-mongo:27017"
+
+            # Force gunicorn to use 1 worker (prevents OOM)
+            - name: GUNICORN_CMD_ARGS
+              value: "--workers 1 --timeout 180"
 
           volumeMounts:
             - name: pdfhub-static
@@ -66,23 +73,23 @@ spec:
             httpGet:
               path: /health
               port: 8000
-            initialDelaySeconds: 10
+            initialDelaySeconds: 15
             periodSeconds: 10
 
           livenessProbe:
             httpGet:
               path: /health
               port: 8000
-            initialDelaySeconds: 30
+            initialDelaySeconds: 40
             periodSeconds: 30
 
           resources:
             requests:
-              cpu: "250m"
-              memory: "512Mi"
-            limits:
               cpu: "500m"
-              memory: "1Gi"
+              memory: "2Gi"
+            limits:
+              cpu: "1"
+              memory: "4Gi"
 
       volumes:
         - name: pdfhub-static
