@@ -133,6 +133,9 @@ DATABASES = {
     }
 }
 
+# MongoDB (PDFhub)
+import os
+MONGO_URI = os.environ.get("MONGO_URI", "mongodb://localhost:27017")
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
