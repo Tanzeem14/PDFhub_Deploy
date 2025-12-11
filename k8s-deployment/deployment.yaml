@@ -112,7 +112,7 @@ spec:
                 port:
                   number: 8000
 
-          - path: /static
+          - path: /static/
             pathType: Prefix
             backend:
               service:

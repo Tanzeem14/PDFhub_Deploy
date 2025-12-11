@@ -172,11 +172,26 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
+# -----------------------------
+# Static Files Configuration
+# -----------------------------
 STATIC_URL = '/static/'
+
+# Where collectstatic will put all files inside the container
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
+# Include your project's /static folder so CSS appears in staticfiles/
 STATICFILES_DIRS = [
-    BASE_DIR / "static",   # <---- ADD THIS
+    BASE_DIR / 'static',
+]
+
+# Whitenoise Storage (required for production)
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# Make sure static finders are enabled
+STATICFILES_FINDERS = [
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 ]
 
 MEDIA_URL = '/media/'
