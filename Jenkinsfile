@@ -83,12 +83,13 @@ spec:
             steps {
                 container('dind') {
                     sh """
-                        echo "⏳ Building Docker image..."
-                        docker build -t ${DOCKER_IMAGE}:${BUILD_NUMBER} -t ${DOCKER_IMAGE}:latest .
+                        echo "⏳ Building Docker image (no cache)..."
+                        docker build --no-cache -t ${DOCKER_IMAGE}:${BUILD_NUMBER} -t ${DOCKER_IMAGE}:latest .
                     """
                 }
             }
         }
+
 
         stage('SonarQube Analysis') {
             steps {
