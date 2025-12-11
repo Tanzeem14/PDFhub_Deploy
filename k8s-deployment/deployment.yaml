@@ -90,10 +90,6 @@ spec:
               cpu: "1"
               memory: "4Gi"
 
-      volumes:
-        - name: pdfhub-static
-          persistentVolumeClaim:
-            claimName: pdfhub-static-pvc
 ---
 # -------------------------------
 # Service
