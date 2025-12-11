@@ -80,17 +80,15 @@ spec:
         }
 
         stage('Build Docker Image') {
-            
             steps {
                 container('dind') {
                     sh """
-                        echo "⏳ Code changed — building Docker image..."
+                        echo "⏳ Building Docker image..."
                         docker build -t ${DOCKER_IMAGE}:${BUILD_NUMBER} -t ${DOCKER_IMAGE}:latest .
                     """
                 }
             }
         }
-
 
         stage('SonarQube Analysis') {
             steps {
@@ -101,7 +99,6 @@ spec:
                           -Dsonar.sources=. \
                           -Dsonar.host.url=http://my-sonarqube-sonarqube.sonarqube.svc.cluster.local:9000 \
                           -Dsonar.token=${SONAR_TOKEN}
-
                     """
                 }
             }
@@ -118,7 +115,6 @@ spec:
         }
 
         stage('Push Image') {
-            
             steps {
                 container('dind') {
                     sh """
@@ -127,37 +123,31 @@ spec:
 
                         docker push ${REGISTRY}/${DOCKER_IMAGE}:${BUILD_NUMBER}
                         docker push ${REGISTRY}/${DOCKER_IMAGE}:latest
-
-                        docker pull ${REGISTRY}/${DOCKER_IMAGE}:${BUILD_NUMBER}
-                        docker image ls
                     """
                 }
             }
         }
 
-                /* ---------------------- DEPLOY TO K8S ----------------------------- */
         stage('Deploy to Kubernetes') {
             steps {
                 container('kubectl') {
                     dir('k8s-deployment') {
                         sh """
-                            echo "🚀 Applying PDFhub Deployment YAML..."
-                            
+                            echo "🚀 Applying PDFhub deployment..."
                             kubectl apply -f deployment.yaml -n ${NAMESPACE}
-                            
+
                             echo "⏳ Waiting for rollout..."
                             kubectl rollout status deployment/pdfhub-deployment -n ${NAMESPACE}
                         """
                     }
                 }
             }
-}
-
+        }
+    }
 
     post {
         success { echo "🎉 PDFhub CI/CD Pipeline completed successfully!" }
         failure { echo "❌ PDFhub CI/CD Pipeline failed" }
         always  { echo "🔄 Pipeline finished" }
     }
-}
 }
