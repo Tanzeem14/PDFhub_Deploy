@@ -80,9 +80,9 @@ spec:
         }
 
         stage('Build Docker Image') {
-            when {
-                changeset "**/*"
-            }
+            // when {
+            //     changeset "**/*"
+            // }
             steps {
                 container('dind') {
                     sh """
