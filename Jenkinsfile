@@ -80,9 +80,7 @@ spec:
         }
 
         stage('Build Docker Image') {
-            when {
-                changeset "**/*"
-    }
+            
             steps {
                 container('dind') {
                     sh """
@@ -120,9 +118,7 @@ spec:
         }
 
         stage('Push Image') {
-            when {
-                changeset "**/*"
-    }
+            
             steps {
                 container('dind') {
                     sh """
