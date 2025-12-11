@@ -5,23 +5,7 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: "2401067"
----
-# -------------------------------
-# PersistentVolumeClaim
-# -------------------------------
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: pdfhub-static-pvc
-  namespace: "2401067"
-spec:
-  storageClassName: local-path
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
----
+
 # -------------------------------
 # Deployment
 # -------------------------------
@@ -64,9 +48,7 @@ spec:
             - name: GUNICORN_CMD_ARGS
               value: "--workers 1 --timeout 180"
 
-          volumeMounts:
-            - name: pdfhub-static
-              mountPath: /app/staticfiles
+          
 
           readinessProbe:
             httpGet:
@@ -116,8 +98,6 @@ kind: Ingress
 metadata:
   name: pdfhub-ingress
   namespace: "2401067"
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
   ingressClassName: nginx
   rules:
