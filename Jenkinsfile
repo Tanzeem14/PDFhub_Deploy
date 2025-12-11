@@ -80,15 +80,19 @@ spec:
         }
 
         stage('Build Docker Image') {
+            when {
+                changeset "**/*"
+            }
             steps {
                 container('dind') {
                     sh """
+                        echo "⏳ Code changed — building Docker image..."
                         docker build -t ${DOCKER_IMAGE}:${BUILD_NUMBER} -t ${DOCKER_IMAGE}:latest .
-                        docker image ls
                     """
                 }
             }
         }
+
 
         stage('SonarQube Analysis') {
             steps {
