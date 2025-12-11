@@ -66,7 +66,7 @@ spec:
 
           volumeMounts:
             - name: pdfhub-static
-              mountPath: /app/static
+              mountPath: /app/staticfiles
 
           readinessProbe:
             httpGet:
@@ -128,7 +128,7 @@ spec:
     - host: 2401067.imcc.com
       http:
         paths:
-          - path: /
+          - path: /static
             pathType: Prefix
             backend:
               service:
