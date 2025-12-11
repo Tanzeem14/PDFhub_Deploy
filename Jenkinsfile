@@ -34,6 +34,9 @@ spec:
     image: sonarsource/sonar-scanner-cli
     command: ["cat"]
     tty: true
+    volumeMounts:
+      - name: workspace-volume
+        mountPath: /home/jenkins/agent
 
   - name: kubectl
     image: bitnami/kubectl:latest
@@ -42,6 +45,9 @@ spec:
     securityContext:
       runAsUser: 0
       readOnlyRootFilesystem: false
+    volumeMounts:
+      - name: workspace-volume
+        mountPath: /home/jenkins/agent
 
   volumes:
     - name: docker-storage
@@ -59,7 +65,7 @@ spec:
         REGISTRY_HOST = "nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085"
         REGISTRY = "${REGISTRY_HOST}/2401067"
         NAMESPACE = "2401067"
-        SONAR_TOKEN = "sqp_5c6bcf57fec846bce3562d1d777b633b4360c411"
+        SONAR_TOKEN = "sqp_bd105c01fbb91ae9b85ee3b9fa0c7bd89b38b718"
     }
 
     stages {
@@ -67,7 +73,7 @@ spec:
         stage('Checkout Code') {
             steps {
                 sh '''
-                    rm -rf *
+                    rm -rf PDFhub_Deploy
                     git clone https://github.com/Tanzeem14/PDFhub_Deploy.git .
                 '''
             }
@@ -92,7 +98,8 @@ spec:
                           -Dsonar.projectKey=2401067_PDFhub \
                           -Dsonar.sources=. \
                           -Dsonar.host.url=http://my-sonarqube-sonarqube.sonarqube.svc.cluster.local:9000 \
-                          -Dsonar.login=${SONAR_TOKEN}
+                          -Dsonar.token=${SONAR_TOKEN}
+
                     """
                 }
             }
