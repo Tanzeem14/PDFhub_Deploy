@@ -143,9 +143,6 @@ spec:
                     sh """
                         echo "🚀 Updating PDFhub Kubernetes Deployment..."
                         
-                        // kubectl set image deployment/pdfhub-deployment \
-                        //   pdfhub-container=${REGISTRY}/${DOCKER_IMAGE}:${BUILD_NUMBER} \
-                        //   -n ${NAMESPACE}
                            kubectl apply -f deployment.yaml -n 2401067
                            kubectl rollout status deployment/pdfhub-deployment -n 2401067
                     """
