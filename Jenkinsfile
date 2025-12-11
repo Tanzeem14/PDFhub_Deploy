@@ -160,3 +160,4 @@ spec:
         always  { echo "🔄 Pipeline finished" }
     }
 }
+}
