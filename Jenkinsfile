@@ -143,16 +143,20 @@ spec:
         stage('Deploy to Kubernetes') {
             steps {
                 container('kubectl') {
-                    sh """
-                        echo "🚀 Updating PDFhub Kubernetes Deployment..."
-                        
-                           kubectl apply -f deployment.yaml -n 2401067
-                           kubectl rollout status deployment/pdfhub-deployment -n 2401067
-                    """
+                    dir('k8s-deployment') {
+                        sh """
+                            echo "🚀 Applying PDFhub Deployment YAML..."
+                            
+                            kubectl apply -f deployment.yaml -n ${NAMESPACE}
+                            
+                            echo "⏳ Waiting for rollout..."
+                            kubectl rollout status deployment/pdfhub-deployment -n ${NAMESPACE}
+                        """
+                    }
                 }
             }
-        }
-    }
+}
+
 
     post {
         success { echo "🎉 PDFhub CI/CD Pipeline completed successfully!" }
