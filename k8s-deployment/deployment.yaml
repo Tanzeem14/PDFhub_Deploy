@@ -71,7 +71,7 @@ spec:
 
       containers:
         - name: pdfhub-container
-          image: 127.0.0.1:30085/2401067/pdfhub:latest
+          image: nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085/2401067/pdfhub:latest
           imagePullPolicy: Always
 
           ports:
