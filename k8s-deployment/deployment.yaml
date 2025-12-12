@@ -6,6 +6,7 @@ kind: Namespace
 metadata:
   name: "2401067"
 
+---
 # -------------------------------
 # Deployment
 # -------------------------------
@@ -48,8 +49,6 @@ spec:
             - name: GUNICORN_CMD_ARGS
               value: "--workers 1 --timeout 180"
 
-          
-
           readinessProbe:
             httpGet:
               path: /health
@@ -89,22 +88,35 @@ spec:
       port: 8000
       targetPort: 8000
   type: ClusterIP
+
 ---
 # -------------------------------
-# Ingress
+# Ingress (Fixed Static + Rewrite)
 # -------------------------------
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: pdfhub-ingress
   namespace: "2401067"
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+    # Uncomment this when you add HTTPS:
+    # nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
 spec:
   ingressClassName: nginx
+
+  # Uncomment when TLS is added
+  # tls:
+  #   - hosts:
+  #       - 2401067.imcc.com
+  #     secretName: tls-secret
+
   rules:
     - host: 2401067.imcc.com
       http:
         paths:
-          - path: /
+          # Main Django backend
+          - path: /(.*)
             pathType: Prefix
             backend:
               service:
@@ -112,7 +124,8 @@ spec:
                 port:
                   number: 8000
 
-          - path: /static/
+          # Static files served by whitenoise
+          - path: /static/(.*)
             pathType: Prefix
             backend:
               service:
