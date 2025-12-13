@@ -25,9 +25,6 @@ spec:
       labels:
         app: pdfhub
     spec:
-      imagePullSecrets:
-        - name: nexus-secret
-
       containers:
         - name: pdfhub-container
           image: 127.0.0.1:30085/2401067/pdfhub:latest
