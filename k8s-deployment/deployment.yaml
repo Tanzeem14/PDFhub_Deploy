@@ -44,7 +44,7 @@ spec:
               value: "project.settings"
 
             - name: MONGO_URI
-              value: "mongodb://pdfhub-mongo:27017"
+              value: "mongodb://tanzeem:tanzeem123@my-mongodb.mongodb:27017/studentdb?authSource=studentdb"
 
             - name: GUNICORN_CMD_ARGS
               value: "--workers 1 --timeout 180"
